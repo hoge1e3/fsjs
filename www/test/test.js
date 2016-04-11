@@ -1,11 +1,13 @@
-requirejs(["LSFS","../test/ROM_k","assert","DataURL","PathUtil","SFile","SandBoxFile","NativeFS"],
-function (LSFS, romk,assert,DataURL,P,SFile,SandBoxFile, NativeFS) {
+requirejs(["LSFS","../test/ROM_k","assert","DataURL","PathUtil","SFile","NativeFS","RootFS"],
+function (LSFS, romk,assert,DataURL,P,SFile, NativeFS,RootFS) {
+try{
+    
     assert.is(arguments,
-       [Function,LSFS,Function,Function,Object,Function,Object, Function]);
-    var rootFS=window.rfs=new LSFS(localStorage);
+       [Function,LSFS,Function,Function,Object,Function,Function]);
+    var rootFS=window.rfs=new RootFS(new LSFS(localStorage));
     window.onerror=function (e) {
         alert(e);
-        alert(e.stack)
+        alert(e.stack);
         //console.log(e.stack);
         //if (e.preventDefault) e.preventDefault();
         return false;
@@ -16,9 +18,9 @@ function (LSFS, romk,assert,DataURL,P,SFile,SandBoxFile, NativeFS) {
     rootFS.mount("/rom/",romk);
     rootFS.mount("/ram/",LSFS.ramDisk());
     rootFS.get("/var/").mkdir();
-    assert.ensureError(function (){
+    /*assert.ensureError(function (){
         rootFS.mount("/var/",romk);
-    });
+    });*/
     var cd=assert.is(rootFS.get("/"),SFile);
     var root=cd;
     // relpath:
@@ -34,7 +36,7 @@ function (LSFS, romk,assert,DataURL,P,SFile,SandBoxFile, NativeFS) {
     var nfs;
     if (NativeFS.available)  {
         require('nw.gui').Window.get().showDevTools();
-        var nfsp=P.rel(process.cwd().replace(/\\/g,"/"), "fs/");
+        var nfsp=P.rel(PathUtil.directorify(process.cwd()), "fs/");
         console.log(nfsp);
         rootFS.mount("/fs/",new NativeFS(nfsp));
         nfs=root.rel("fs/");
@@ -42,7 +44,7 @@ function (LSFS, romk,assert,DataURL,P,SFile,SandBoxFile, NativeFS) {
     var r=cd.ls();
     var ABCD="abcd\nefg";
     var CDEF="defg\nてすと";
-    assert(r.indexOf("rom/")>=0, r);
+    //assert(r.indexOf("rom/")>=0, r);
     var romd=root.rel("rom/");
     var ramd=root.rel("ram/");
     var testf=root.rel("testfn.txt");
@@ -76,7 +78,7 @@ function (LSFS, romk,assert,DataURL,P,SFile,SandBoxFile, NativeFS) {
         assert(testd.rel("sub/").exists());
         assert(rootFS.get("/testdir/sub/").exists());
         assert(testf.exists());
-        var sf=SandBoxFile.create(testd._clone());
+        var sf=testd.setPolicy({topDir:testd});//SandBoxFile.create(testd._clone());
         assert(sf.rel("test.txt").text()==ABCD);
         sf.rel("test3.txt").text(CDEF);
         assert.ensureError(function () {
@@ -161,8 +163,8 @@ function (LSFS, romk,assert,DataURL,P,SFile,SandBoxFile, NativeFS) {
             testf.removeWithoutTrash({recursive:true});
         }
     }
-    console.log(rootFS.opendir("/var/"));
-    console.log(rootFS.opendir("/rom/"));
+    console.log(rootFS.get("/var/").ls());
+    console.log(rootFS.get("/rom/").ls());
 
     window.DataURL=DataURL;
     function chkrom() {
@@ -180,4 +182,8 @@ function (LSFS, romk,assert,DataURL,P,SFile,SandBoxFile, NativeFS) {
         },options);
         assert.eq(di.join(","), result);
     }
+}catch(e) {
+    console.log(e.stack);
+    alert(e);
+}
 });

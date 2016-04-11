@@ -1,42 +1,76 @@
-define(["Contents","extend","assert","PathUtil"],
-function (C,extend,A,P) {
+define(["extend","assert","PathUtil","Util","Content","FS2"],
+function (extend,A,P,Util,Content,FS2) {
 
-var SFile=function (fs, path) {
+var SFile=function (rootFS, path) {
     A.is(path, P.Absolute);
-    A(fs && fs.getReturnTypes);
+    //A(fs && fs.getReturnTypes, fs);
     this._path=path;
-    this.fs=fs;
+    this.rootFS=rootFS;
+    this.fs=rootFS.resolveFS(path);
+    this.act={};// path/fs after follwed symlink
+    this.act.path=this.fs.resolveLink(path);
+    this.act.fs=rootFS.resolveFS(this.act.path);
+    A.is(this.act, {fs:FS2, path:P.Absolute});
     if (this.isDir() && !P.isDir(path)) {
         this._path+=P.SEP;
     }
 };
+SFile.is=function (path) {
+    return path && typeof (path.isSFile)=="function" && path.isSFile();
+};
+function getPath(f) {
+    if (SFile.is(f)) {
+        return f.path();
+    } else {
+        A.is(f,P.Absolute);
+        return f;
+    }
+}
 SFile.prototype={
     isSFile: function (){return true;},
-    _clone: function (){
-        return this.fs.getRootFS().get(this.path());
+    setPolicy: function (p) {
+        if (this.policy) throw new Error("policy already set");
+        this.policy=p;
+        return this._clone();
     },
-    _resolve: function (path) {
+    getPolicy: function (p) {
+        return this.policy;
+    },
+    _clone: function (){
+        return this._resolve(this.path());
+    },
+    _resolve: function (path, options) {
         var res;
-        if (typeof (path.isSFile)=="function") {
+        options=options||{};
+        if (SFile.is(path)) {
             res=path;
         } else {
             A.is(path,P.Absolute);
-            res=this.fs.getRootFS().get(path);
+            var topdir;
+            var policy=options.policy || this.policy;
+            if (policy && (topdir=policy.topDir)) {
+                if (topdir.path) topdir=topdir.path();
+                if (!P.startsWith(path, topdir)) {
+                    throw new Error(path+": cannot access. Restricted to "+topdir);
+                }
+            }
+            res=new SFile(this.rootFS, path);
+            res.policy=policy;
         }
-        if (this.wrapper) {
-            return this.wrapper.wrap(res);
+        if (res.policy) {
+            return Util.privatize(res);
         } else {
             return res;
         }
     },
-    // Path from Root
-    path: function () {
-        return this._path;//this.fs.getPathFromRootFS(this.pathT);
+    contains: function (file) {
+        A(SFile.is(file),file+" shoud be a SFile object.");
+        if (!this.isDir()) return false;
+        return P.startsWith( file.path(), this.path());
     },
-    // Path from This fs
-    /*pathInThisFS: function () {
-        return this.pathT;
-    },*/
+    path: function () {
+        return this._path;
+    },
     name: function () {
         return P.name(this.path());
     },
@@ -66,10 +100,10 @@ SFile.prototype={
         return this._resolve(P.rel(pathR, relPath));
     },
     startsWith: function (pre) {
-        return P.startsWith(this.name,pre);
+        return P.startsWith(this.name(),pre);
     },
     endsWith: function (post) {
-        return P.endsWith(this.name,post);
+        return P.endsWith(this.name(),post);
     },
     equals:function (o) {
         return (o && typeof o.path=="function" && o.path()==this.path());
@@ -79,10 +113,10 @@ SFile.prototype={
     },
     //Common
     touch: function () {
-        this.fs.touch(this.path());
+        this.act.fs.touch(this.act.path);
     },
     isReadOnly: function () {
-        this.fs.isReadOnly(this.path());
+        return this.act.fs.isReadOnly(this.act.path);
     },
     isTrashed:function () {
         var m=this.metaInfo();
@@ -91,46 +125,49 @@ SFile.prototype={
     },
     metaInfo: function () {
         if (arguments.length==0) {
-            return this.getMetaInfo(this,arguments);
+            return this.getMetaInfo.apply(this,arguments);
         } else {
             return this.setMetaInfo.apply(this,arguments);
         }
     },
     getMetaInfo: function (options) {
-        return this.fs.getMetaInfo(this.path(),options);
+        return this.act.fs.getMetaInfo(this.act.path,options);
     },
     setMetaInfo: function (info, options) {
-        return this.fs.setMetaInfo(this.path(),info, options);
+        return this.act.fs.setMetaInfo(this.act.path,info, options);
     },
     lastUpdate:function () {
         A(this.exists());
         return this.metaInfo().lastUpdate;
     },
-    /*rootFS: function () {
-        return this.fs.getRootFS();
-    },*/
     exists: function (options) {
         options=options||{};
         var p=this.fs.exists(this.path(),options);
         if (p || options.noFollowLink) {
             return p;
         } else {
-            return this.resolveLink().exists({noFollowLink:true});
+            return this.act.fs.exists(this.act.path,{noFollowLink:true});
         }
     },
     rm: function (options) {
+        //   ln /test/c /a/b/
+        //   rm a/b/c/
+        //   rm a/b/c/d
         options=options||{};
-        if (!this.exists({noFollowLink:true})) {
-            var l=this.resolveLink();
-            if (!this.equals(l)) return l.rm(options);
+        if (this.isLink()) {
+            return this.fs.rm(this.path(),options);
         }
-        if (this.isDir() && options.recursive) {
+        /*if (!this.exists({noFollowLink:true})) {
+            return this.act.fs.rm(this.act.path, options);
+        }*/
+        if (this.isDir() && (options.recursive||options.r)) {
             this.each(function (f) {
                 f.rm(options);
             });
         }
-        var pathT=this.path();
-        this.fs.rm(pathT, options);
+        return this.act.fs.rm(this.act.path, options);
+        //var pathT=this.path();
+        //this.fs.rm(pathT, options);
     },
     removeWithoutTrash: function (options) {
         options=options||{};
@@ -138,12 +175,10 @@ SFile.prototype={
         this.rm(options);
     },
     isDir: function () {
-        return this.fs.isDir(this.path());
+        return this.act.fs.isDir(this.act.path);
     },
     // File
     text:function () {
-        var l=this.resolveLink();
-        if (!this.equals(l)) return l.text.apply(l,arguments);
         if (arguments.length>0) {
             this.setText(arguments[0]);
         } else {
@@ -152,13 +187,47 @@ SFile.prototype={
     },
     setText:function (t) {
         A.is(t,String);
-        this.fs.setContent(this.path(), t);
+        if (this.isText()) {
+            this.act.fs.setContent(this.act.path, Content.plainText(t));
+        } else {
+            this.act.fs.setContent(this.act.path, Content.url(t));
+        }
     },
-    getText:function (t) {
-        return this.fs.getContent(this.path(), {type:String});
+    getContent: function (f) {
+        if (typeof f=="function") {
+            return this.act.fs.getContentAsync(this.act.path).then(f);
+        }
+        return this.act.fs.getContent(this.act.path);
+    },
+    setContent: function (c) {
+        return this.act.fs.setContentAsync(this.act.path,c);
+    },
+
+    getText:function () {
+        if (this.isText()) {
+            return this.act.fs.getContent(this.act.path).toPlainText();
+        } else {
+            return this.act.fs.getContent(this.act.path).toURL();
+        }
+    },
+    isText: function () {
+        return this.act.fs.isText(this.act.path);
+    },
+    contentType: function () {
+        return this.act.fs.getContentType(this.act.path);
+    },
+    setBytes:function (b) {
+        return this.act.fs.setContent(this.act.path, Content.bin(b,this.contentType()));
+    },
+    getBytes:function (options) {
+        options=options||{};
+        return this.act.fs.getContent(this.act.path).toBin(options.binType);
+    },
+    getURL: function () {
+        return this.act.fs.getURL(this.act.path);
     },
     lines:function () {
-        return this.text().split("\n");
+        return this.text().replace(/\r/g,"").split("\n");
     },
     obj: function () {
         var file=this;
@@ -167,13 +236,45 @@ SFile.prototype={
             if (!t) return null;
             return JSON.parse(t);
         } else {
-            file.text(JSON.stringify(arguments[0]));
+            file.text(JSON.stringify(A.is(arguments[0],Object) ));
         }
     },
     copyFrom: function (src, options) {
-        var file=this;
-        file.text(src.text());
-        if (options.a) file.metaInfo(src.metaInfo());
+        return src.copyTo(this,options);
+    },
+    copyTo: function (dst, options) {
+        A(dst && dst.isSFile(),dst+" is not a file");
+        var src=this;
+        var options=options||{};
+        var srcIsDir=src.isDir();
+        var dstIsDir=dst.isDir();
+        if (!srcIsDir && dstIsDir) {
+            dst=dst.rel(src.name());
+            A(!dst.isDir(), dst+" is a directory.");
+            dstIsDir=false;
+        }
+        if (srcIsDir && !dstIsDir) {
+           this.err("Cannot move dir to file");
+        } else if (!srcIsDir && !dstIsDir) {
+            if (options.echo) options.echo(src+" -> "+dst);
+            var res=this.act.fs.cp(this.act.path, dst.getResolvedLinkPath(),options);
+            if (options.a) {
+                dst.setMetaInfo(src.getMetaInfo());
+            }
+            return res;
+        } else {
+            A(srcIsDir && dstIsDir);
+            src.each(function (s) {
+                dst.rel(s.name()).copyFrom(s, options);
+            });
+        }
+        //file.text(src.text());
+        //if (options.a) file.metaInfo(src.metaInfo());
+    },
+    moveFrom: function (src, options) {
+        var res=this.copyFrom(src,options);
+        src.rm({recursive:true});
+        return res;
     },
     // Dir
     assertDir:function () {
@@ -202,14 +303,12 @@ SFile.prototype={
     listFiles:function (options) {
         A(options==null || typeof options=="object");
         var dir=this.assertDir();
-        var l=this.resolveLink();
-        if (!this.equals(l)) return l.listFiles.apply(l,arguments);
         var path=this.path();
         var ord;
         if (typeof options=="function") ord=options;
         options=dir.convertOptions(options);
         if (!ord) ord=options.order;
-        var di=this.fs.opendir(path, options);
+        var di=this.act.fs.opendir(this.act.path, options);
         var res=[];
         for (var i=0;i<di.length; i++) {
             var name=di[i];
@@ -250,16 +349,17 @@ SFile.prototype={
         this.touch();
     },
     link: function (to,options) {// % ln to path
-        to=this._resolve(A(to));
-        this.fs.link(this.path(),to.path(),options);
+        if (this.exists()) throw new Error(this.path()+": exists.");
+        return this.act.fs.link(this.act.path,to.path(),options);
     },
-    resolveLink: function () {
-        var l=this.fs.resolveLink(this.path());
-        A.is(l,P.Absolute);
-        return this._resolve(l);
+    resolveLink:function () {
+        return this._resolve(this.act.path);
     },
     isLink: function () {
         return this.fs.isLink(this.path());
+    },
+    getResolvedLinkPath: function () {
+        return this.act.path;
     }
 };
 return SFile;
