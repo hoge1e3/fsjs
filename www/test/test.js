@@ -1,9 +1,9 @@
-requirejs(["LSFS","../test/ROM_k","assert","DataURL","PathUtil","SFile","NativeFS","RootFS"],
-function (LSFS, romk,assert,DataURL,P,SFile, NativeFS,RootFS) {
+requirejs(["LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS"],
+function (LSFS, romk,assert,P,SFile, NativeFS,RootFS) {
 try{
     
     assert.is(arguments,
-       [Function,LSFS,Function,Function,Object,Function,Function]);
+       [Function,LSFS,Function,Object,Function,Function]);
     var rootFS=window.rfs=new RootFS(new LSFS(localStorage));
     window.onerror=function (e) {
         alert(e);
@@ -36,9 +36,11 @@ try{
     var nfs;
     if (NativeFS.available)  {
         require('nw.gui').Window.get().showDevTools();
-        var nfsp=P.rel(PathUtil.directorify(process.cwd()), "fs/");
+        var nfsp="C:/bin/Dropbox/workspace/fsjs/fs/";//P.rel(PathUtil.directorify(process.cwd()), "fs/");
         console.log(nfsp);
-        rootFS.mount("/fs/",new NativeFS(nfsp));
+        var nfso;
+        rootFS.mount("/fs/",nfso=new NativeFS(nfsp));
+        assert(nfso.exists("/fs/"),"/fs/ not exists");
         nfs=root.rel("fs/");
     }
     var r=cd.ls();
@@ -166,7 +168,7 @@ try{
     console.log(rootFS.get("/var/").ls());
     console.log(rootFS.get("/rom/").ls());
 
-    window.DataURL=DataURL;
+    //window.DataURL=Content.DataURL;
     function chkrom() {
         var p=JSON.parse(localStorage["/"]);
         if ("rom/" in p) {

@@ -1,9 +1,9 @@
-define(["FS2","assert","PathUtil","extend","MIMETypes","DataURL","Content"],
-        function (FS,A,P,extend,MIME,DataURL,Content) {
-    var available=(typeof process=="object" && process.__node_webkit);
+define(["FS2","assert","PathUtil","extend","MIMETypes","Content"],
+        function (FS,A,P,extend,MIME,Content) {
+    var available=(typeof process=="object"/* && process.__node_webkit*/);
     if (!available) {
         return function () {
-            throw new Error("This system not suppert native FS");
+            throw new Error("This system not support native FS");
         };
     }
     var assert=A;
@@ -25,6 +25,7 @@ define(["FS2","assert","PathUtil","extend","MIMETypes","DataURL","Content"],
         if (!this.rootPoint) return path;
         A.is(path, P.Absolute);
         A(this.inMyFS(path),path+" is not fs of "+this);
+        //console.log("tonat:MP",P.rel( this.rootPoint, P.relPath(path, this.mountPoint || P.SEP)));
         return P.rel( this.rootPoint, P.relPath(path, this.mountPoint || P.SEP));
     };
     Pro.arrayBuffer2Buffer= function (a) {
@@ -47,6 +48,7 @@ define(["FS2","assert","PathUtil","extend","MIMETypes","DataURL","Content"],
         return "Native"+(this.rootPoint?"("+this.rootPoint+")":"");
     };
     NativeFS.prototype.inMyFS=function (path) {
+        //console.log("inmyfs",path);
         if (this.mountPoint) {
             return P.startsWith(path, this.mountPoint)
         } else {

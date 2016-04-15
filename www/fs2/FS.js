@@ -52,6 +52,7 @@ define(["FS2","NativeFS","LSFS", "PathUtil","Env","assert","SFile","RootFS"],
         return rootFS.unmount.apply(rootFS,arguments);
     };
     FS.SFile=SFile;
+    FS.Content=Content;
     FS.isFile=function (f) {
         return SFile.is(f);
     };

@@ -19,6 +19,23 @@ function endsWith(str,postfix) {
 function startsWith(str,prefix) {
     return str.substring(0, prefix.length)===prefix;
 }
+function privatize(o){
+    if (o.__privatized) return o;
+    var res={__privatized:true};
+    for (var n in o) {
+        (function (n) {
+            var m=o[n];
+            if (n.match(/^_/)) return;
+            if (typeof m!="function") return;
+            res[n]=function () {
+                var r=m.apply(o,arguments);
+                return r;
+            };
+        })(n);
+    }
+    return res;
+}
+/*
 // From http://hakuhin.jp/js/base64.html#BASE64_DECODE_ARRAY_BUFFER
 function Base64_To_ArrayBuffer(base64){
     base64=base64.replace(/[\n=]/g,"");
@@ -129,24 +146,9 @@ function Base64_From_ArrayBuffer(ary_buffer){
         base64 += "=";
     }
     return base64;
-}
+}*/
 
-function privatize(o){
-    if (o.__privatized) return o;
-    var res={__privatized:true};
-    for (var n in o) {
-        (function (n) {
-            var m=o[n];
-            if (n.match(/^_/)) return;
-            if (typeof m!="function") return;
-            res[n]=function () {
-                var r=m.apply(o,arguments);
-                return r;
-            };
-        })(n);
-    }
-    return res;
-}
+/*
 function hasNodeBuffer() {
     return typeof Buffer!="undefined";
 }
@@ -181,18 +183,18 @@ function str2utf8bytes(str, binType) {
         } else a.push(e.charCodeAt(i));
     }
     return (typeof Buffer!="undefined" && binType===Buffer ? new Buffer(a) : new Uint8Array(a).buffer);
-}
+}*/
 
 return {
     getQueryString:getQueryString,
     endsWith: endsWith, startsWith: startsWith,
-    Base64_To_ArrayBuffer:Base64_To_ArrayBuffer,
-    Base64_From_ArrayBuffer:Base64_From_ArrayBuffer,
-    utf8bytes2str: utf8bytes2str,
-    str2utf8bytes: str2utf8bytes,
-    privatize: privatize,
-    hasNodeBuffer:hasNodeBuffer,
-    isNodeBuffer: isNodeBuffer,
-    isBuffer: isBuffer
+    //Base64_To_ArrayBuffer:Base64_To_ArrayBuffer,
+    //Base64_From_ArrayBuffer:Base64_From_ArrayBuffer,
+    //utf8bytes2str: utf8bytes2str,
+    //str2utf8bytes: str2utf8bytes,
+    privatize: privatize
+    //hasNodeBuffer:hasNodeBuffer,
+    //isNodeBuffer: isNodeBuffer,
+    //isBuffer: isBuffer
 };
 });
