@@ -1,9 +1,9 @@
-requirejs(["LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS"],
-function (LSFS, romk,assert,P,SFile, NativeFS,RootFS) {
+requirejs(["LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS","Content"],
+function (LSFS, romk,assert,P,SFile, NativeFS,RootFS,Content) {
 try{
     
     assert.is(arguments,
-       [Function,LSFS,Function,Object,Function,Function]);
+       [Function,LSFS,Function,Object,Function,Function,Function]);
     var rootFS=window.rfs=new RootFS(new LSFS(localStorage));
     window.onerror=function (e) {
         alert(e);
@@ -18,12 +18,13 @@ try{
     rootFS.mount("/rom/",romk);
     rootFS.mount("/ram/",LSFS.ramDisk());
     rootFS.get("/var/").mkdir();
+    // check cannot mount which is already exists (別にできてもいいじゃん)
     /*assert.ensureError(function (){
         rootFS.mount("/var/",romk);
     });*/
     var cd=assert.is(rootFS.get("/"),SFile);
     var root=cd;
-    // relpath:
+    // check relpath:
     //  path= /a/b/c   base=/a/b/  res=c
     assert( root.rel("a/b/c").relPath("/a/b/")==="c");
     assert( root.rel("a/b/c").relPath(root.rel("a/b/"))==="c");
@@ -33,6 +34,8 @@ try{
     assert( root.rel("a/b/c/").relPath("/a/b/c/d")==="../");
     //  path= /a/b/c/   base=/a/b/e/f  res= ../../c/
     assert( root.rel("a/b/c/").relPath("/a/b/e/f")==="../../c/");
+    // ext()
+    assert.eq(P.ext("test.txt"),".txt");
     var nfs;
     if (NativeFS.available)  {
         require('nw.gui').Window.get().showDevTools();
@@ -46,14 +49,11 @@ try{
     var r=cd.ls();
     var ABCD="abcd\nefg";
     var CDEF="defg\nてすと";
+    //obsolate: ls does not enum mounted dirs
     //assert(r.indexOf("rom/")>=0, r);
     var romd=root.rel("rom/");
     var ramd=root.rel("ram/");
     var testf=root.rel("testfn.txt");
-    /*assert.ensureError(function () {
-        root.rel("fuga.txt").text("hoge");
-    });*/
-    assert.eq(P.ext("test.txt"),".txt");
     if (nfs) assert(nfs.fs.isText("/test.txt"));
 
     var testd;
@@ -63,8 +63,10 @@ try{
         console.log("Enter", cd);
         testd.mkdir();
         chkrom();
+        //--- check exists
         assert(testd.exists({includeTrashed:true}));
         assert(testd.exists());
+        //--- check lastUpdate
         var d=LSFS.now();
         testf.text(testd.path());
         assert( Math.abs( testf.lastUpdate()-d) <= 1000);
@@ -121,7 +123,17 @@ try{
             assert(P.startsWith(pngurl, "data:"));
             document.getElementById("img").src=pngurl;
             nfs.rel("sub/test.png").text(pngurl);
+            
+            nfs.rel("sub/test.png").copyTo(testd.rel("test.png"));
+            chkCpy(nfs.rel("Tonyu/Projects/MapTest/Test.tonyu"));
+            chkCpy(nfs.rel("Tonyu/Projects/MapTest/images/park.png"));
+            chkCpy(testd.rel("test.png"));
+            testd.rel("test.png").removeWithoutTrash();
         }
+        console.log(testd.rel("test.txt").path(),testd.rel("test.txt").text());
+        testd.rel("test.txt").text(romd.rel("Actor.tonyu").text()+ABCD+CDEF);
+        chkCpy(testd.rel("test.txt"));
+        testd.rel("test.txt").text(ABCD);
 
         setTimeout(function () {location.reload();},10000);
     } else {
@@ -168,6 +180,48 @@ try{
     console.log(rootFS.get("/var/").ls());
     console.log(rootFS.get("/rom/").ls());
 
+    function chkCpy(f) {
+       var tmp=f.up().rel("tmp_"+f.name());
+       f.copyTo(tmp);
+       checkSame(f,tmp);
+       var c=f.getContent();
+       tmp.setContent(c);
+       checkSame(f,tmp);
+
+       // plain->plain(.txt) / url(bin->URL)->url(URL->bin) (.bin)
+       var t=f.text();
+       tmp.text(t);
+       checkSame(f,tmp);
+       
+       // bin->bin
+       var b=f.getBytes();
+       tmp.setBytes(b);
+       checkSame(f,tmp);
+       
+        if (f.isText()) {
+            // plain->bin(lsfs) , bin->plain(natfs)
+           b=f.getBytes();
+           c=Content.bin(b,"text/plain");
+           t=c.toPlainText();
+           tmp.setText(t);
+           checkSame(f,tmp);
+        }
+
+       
+	   tmp.removeWithoutTrash();         
+    }
+    function checkSame(a,b) {
+       console.log("check same",a,b,a.text().length);
+       assert(a.text()==b.text(),"text is not match: "+a+","+b);
+       var a1=a.getBytes({binType:ArrayBuffer});
+       var b1=b.getBytes({binType:ArrayBuffer});
+       a1=new Uint8Array(a1);
+       b1=new Uint8Array(b1);
+       console.log("bin dump:",a1[0],a1[1],a1[2],a1[3]);
+       assert(a1.length>0,"shoule be longer than 0");
+       assert(a1.length==b1.length,"length is not match: "+a+","+b);
+       for (var i=0;i<a1.length;i++) assert(a1[i]==b1[i],"failed at ["+i+"]");
+    }
     //window.DataURL=Content.DataURL;
     function chkrom() {
         var p=JSON.parse(localStorage["/"]);
