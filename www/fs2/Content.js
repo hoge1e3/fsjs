@@ -1,8 +1,7 @@
-define(["assert","extend"],function (assert,extend) {
+define(["assert","Util"],function (assert,Util) {
     var Content=function () {};
-    //var isNodeBuffer=Util.isNodeBuffer;
-    //var isBuffer=Util.isBuffer;
-
+    var extend=Util.extend;
+    // ------ constructor 
     Content.plainText=function (s,contentType){
         var b=new Content;
         b.contentType=contentType||"text/plain";
@@ -43,6 +42,80 @@ define(["assert","extend"],function (assert,extend) {
         b.contentType=contentType;
         return b;
     };
+    //------- methods
+    var p=Content.prototype;
+    p.toBin = function (binType) {
+        binType=binType || (Content.hasNodeBuffer() ? Buffer: ArrayBuffer);
+        if (this.nodeBuffer) {
+            if (binType===Buffer) {
+                return this.nodeBuffer;
+            } else {
+                return this.arrayBuffer=( Content.buffer2ArrayBuffer(this.nodeBuffer) );
+            }
+        } else if (this.arrayBuffer) {
+            if (binType===ArrayBuffer) {
+                return this.arrayBuffer;
+            } else {
+                return this.nodeBuffer=( Content.arrayBuffer2Buffer(this.arrayBuffer) );
+            }
+        } else if (this.url) {
+            var d=new DataURL(this.url, binType);
+            return this.setBuffer(d.buffer);
+        } else if (this.plain!=null) {
+            return this.setBuffer( Content.str2utf8bytes(this.plain, binType) );
+        }
+        throw new Error("No data");
+    };
+    p.setBuffer=function (b) {
+        assert(b,"b is not set");
+        if (Content.isNodeBuffer(b)) {
+            return this.nodeBuffer=b;
+        } else {
+            return this.arrayBuffer=b;
+        }
+    };
+    p.toArrayBuffer=function () {
+        return this.toBin(ArrayBuffer);
+    };
+    p.toNodeBuffer=function () {
+        return this.toBin(Buffer);
+    };
+    p.toURL=function () {
+        if (this.url) {
+            return this.url;
+        } else {
+            if (!this.arrayBuffer && this.plain!=null) {
+                this.arrayBuffer=Content.str2utf8bytes(this.plain,ArrayBuffer);
+            }
+            if (this.arrayBuffer || this.nodeBuffer) {
+                var d=new DataURL(this.arrayBuffer || this.nodeBuffer,this.contentType);
+                return this.url=d.url;
+            }
+        }
+        throw new Error("No data");
+    };
+    p.toPlainText=function () {
+        if (this.plain!=null) {
+            return this.plain;
+        } else {
+            if (this.url && !this.hasBin() ) {
+                var d=new DataURL(this.url,ArrayBuffer);
+                this.arrayBuffer=d.buffer;
+            }
+            if (this.hasBin()) {
+                return this.plain=Content.utf8bytes2str(
+                        this.nodeBuffer || new Uint8Array(this.arrayBuffer)
+                );
+            }
+        }
+        throw new Error("No data");
+    };
+    p.hasURL=function (){return this.url;};
+    p.hasPlainText=function (){return this.plain!=null;};
+    p.hasBin=function (){return this.nodeBuffer || this.arrayBuffer;};
+    p.hasNodeBuffer= function () {return this.nodeBuffer;};
+    p.hasArrayBuffer= function () {return this.arrayBuffer;};
+    //--------Util funcs
     // From http://hakuhin.jp/js/base64.html#BASE64_DECODE_ARRAY_BUFFER
     Content.Base64_To_ArrayBuffer=function (base64,binType){
 	    var A=binType||ArrayBuffer;
@@ -191,80 +264,7 @@ define(["assert","extend"],function (assert,extend) {
         }
         return (typeof Buffer!="undefined" && binType===Buffer ? new Buffer(a) : new Uint8Array(a).buffer);
     };
-
-    var p=Content.prototype;
-    p.toBin = function (binType) {
-        binType=binType || (Content.hasNodeBuffer() ? Buffer: ArrayBuffer);
-        if (this.nodeBuffer) {
-            if (binType===Buffer) {
-                return this.nodeBuffer;
-            } else {
-                return this.arrayBuffer=( Content.buffer2ArrayBuffer(this.nodeBuffer) );
-            }
-        } else if (this.arrayBuffer) {
-            if (binType===ArrayBuffer) {
-                return this.arrayBuffer;
-            } else {
-                return this.nodeBuffer=( Content.arrayBuffer2Buffer(this.arrayBuffer) );
-            }
-        } else if (this.url) {
-            var d=new DataURL(this.url, binType);
-            return this.setBuffer(d.buffer);
-        } else if (this.plain!=null) {
-            return this.setBuffer( Content.str2utf8bytes(this.plain, binType) );
-        }
-        throw new Error("No data");
-    };
-    p.setBuffer=function (b) {
-        assert(b,"b is not set");
-        if (Content.isNodeBuffer(b)) {
-            return this.nodeBuffer=b;
-        } else {
-            return this.arrayBuffer=b;
-        }
-    };
-    p.toArrayBuffer=function () {
-        return this.toBin(ArrayBuffer);
-    };
-    p.toNodeBuffer=function () {
-        return this.toBin(Buffer);
-    };
-    p.toURL=function () {
-        if (this.url) {
-            return this.url;
-        } else {
-            if (!this.arrayBuffer && this.plain!=null) {
-                this.arrayBuffer=Content.str2utf8bytes(this.plain,ArrayBuffer);
-            }
-            if (this.arrayBuffer || this.nodeBuffer) {
-                var d=new DataURL(this.arrayBuffer || this.nodeBuffer,this.contentType);
-                return this.url=d.url;
-            }
-        }
-        throw new Error("No data");
-    };
-    p.toPlainText=function () {
-        if (this.plain!=null) {
-            return this.plain;
-        } else {
-            if (this.url && !this.hasBin() ) {
-                var d=new DataURL(this.url,ArrayBuffer);
-                this.arrayBuffer=d.buffer;
-            }
-            if (this.hasBin()) {
-                return this.plain=Content.utf8bytes2str(
-                        this.nodeBuffer || new Uint8Array(this.arrayBuffer)
-                );
-            }
-        }
-        throw new Error("No data");
-    };
-    p.hasURL=function (){return this.url;};
-    p.hasPlainText=function (){return this.plain!=null;};
-    p.hasBin=function (){return this.nodeBuffer || this.arrayBuffer;};
-    p.hasNodeBuffer= function () {return this.nodeBuffer;};
-    p.hasArrayBuffer= function () {return this.arrayBuffer;};
-
+    //-------- DataURL
     var A=Content.hasNodeBuffer() ? Buffer :ArrayBuffer;
     //var isBuffer=Util.isBuffer;
     var DataURL=function (data, contentType){
@@ -316,30 +316,3 @@ define(["assert","extend"],function (assert,extend) {
     
     return Content;
 });
-/*
-requirejs(["Content"], function (C) {
-   var s="てすとabc";
-   var c1=C.plainText(s);
-   test(c1,[s]);
-
-   function test(c,path) {
-       var p=c.toPlainText();
-       var u=c.toURL();
-       var a=c.toArrayBuffer();
-       var n=c.toNodeBuffer();
-       console.log(path,"->",p,u,a,n);
-       var c1=C.plainText(p);
-       var c2=C.url(u);
-       var c3=C.bin(a,"text/plain");
-       var c4=C.bin(n,"text/plain");
-       if (path.length<2) {
-           test(c1, path.concat([p]));
-           test(c2, path.concat([u]));
-           test(c3, path.concat([a]));
-           test(c4, path.concat([n]));
-       }
-
-   }
-
-});
-*/

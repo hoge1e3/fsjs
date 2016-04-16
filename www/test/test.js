@@ -36,6 +36,7 @@ try{
     assert( root.rel("a/b/c/").relPath("/a/b/e/f")==="../../c/");
     // ext()
     assert.eq(P.ext("test.txt"),".txt");
+    testContent();
     var nfs;
     if (NativeFS.available)  {
         require('nw.gui').Window.get().showDevTools();
@@ -237,6 +238,30 @@ try{
             di.push(f.relPath(dir));
         },options);
         assert.eq(di.join(","), result);
+    }
+    function testContent() {
+       var s="てすとabc";
+       var C=Content;
+       var c1=C.plainText(s);
+       test(c1,[s]);
+    
+       function test(c,path) {
+           var p=c.toPlainText();
+           var u=c.toURL();
+           var a=c.toArrayBuffer();
+           var n=c.toNodeBuffer();
+           console.log(path,"->",p,u,a,n);
+           var c1=C.plainText(p);
+           var c2=C.url(u);
+           var c3=C.bin(a,"text/plain");
+           var c4=C.bin(n,"text/plain");
+           if (path.length<2) {
+               test(c1, path.concat([p]));
+               test(c2, path.concat([u]));
+               test(c3, path.concat([a]));
+               test(c4, path.concat([n]));
+           }
+        }
     }
 }catch(e) {
     console.log(e.stack);
