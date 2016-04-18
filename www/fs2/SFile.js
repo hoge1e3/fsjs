@@ -216,6 +216,9 @@ SFile.prototype={
     contentType: function () {
         return this.act.fs.getContentType(this.act.path);
     },
+    bytes: function (b) {
+        return this.getBytes();
+    },
     setBytes:function (b) {
         return this.act.fs.setContent(this.act.path, Content.bin(b,this.contentType()));
     },
@@ -275,6 +278,9 @@ SFile.prototype={
         var res=this.copyFrom(src,options);
         src.rm({recursive:true});
         return res;
+    },
+    moveTo: function (dst, options) {
+        return dst.moveFrom(this,options);
     },
     // Dir
     assertDir:function () {
