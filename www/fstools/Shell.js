@@ -5,12 +5,6 @@ define(["FS","Util","PathUtil","assert"],
         Shell.cwd=resolve(dir,true);
         return Shell.pwd();
     };
-    function resolve(v, mustExist) {
-        var r=resolve2(v);
-        if (mustExist && !r.exists()) throw r+": no such file or directory";
-        return r;
-    }
-
     Shell.mount=function (options, path) {
         //var r=resolve(path);
         if (!options || !options.t) {
@@ -36,6 +30,11 @@ define(["FS","Util","PathUtil","assert"],
         });
     }
     Shell.resolve=resolve;
+    function resolve(v, mustExist) {
+        var r=resolve2(v);
+        if (mustExist && !r.exists()) throw r+": no such file or directory";
+        return r;
+    }
     function resolve2(v) {
         if (typeof v!="string") return v;
         var c=Shell.cwd;
@@ -94,6 +93,12 @@ define(["FS","Util","PathUtil","assert"],
             return 1;
         }
     };
+    Shell.mkdir=function (file,options) {
+        file=resolve(file, false);
+        if (file.exists()) throw new Error(file+" : exists");
+        return file.mkdir();
+        
+    };
     Shell.cat=function (file,options) {
         file=resolve(file, true);
         return Shell.echo(file.getContent(function (c) {
@@ -144,11 +149,14 @@ define(["FS","Util","PathUtil","assert"],
         Shell.outUI=ui;
     };
     Shell.echo=function () {
-        console.log.apply(console,arguments);
-        if (Shell.outUI && Shell.outUI.log) Shell.outUI.log.apply(Shell.outUI,arguments);
+        return $.when.apply($,arguments).then(function () {
+            console.log.apply(console,arguments);
+            if (Shell.outUI && Shell.outUI.log) Shell.outUI.log.apply(Shell.outUI,arguments);
+        });
     };
-    Shell.err=function () {
+    Shell.err=function (e) {
         console.log.apply(console,arguments);
+        if (e && e.stack) console.log(e.stack);
         if (Shell.outUI && Shell.outUI.err) Shell.outUI.err.apply(Shell.outUI,arguments);
     };
 
@@ -163,8 +171,8 @@ define(["FS","Util","PathUtil","assert"],
             }
         }
     };
-    sh=Shell;
-    if (tyepof process=="object") {
+    if (!window.sh) window.sh=Shell;
+    if (typeof process=="object") {
         sh.devtool=function () { require('nw.gui').Window.get().showDevTools();}
     }
     return Shell;

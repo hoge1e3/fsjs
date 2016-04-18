@@ -2,6 +2,8 @@ var reqConf={
         "shim": {
         },
         "paths": {
+            "UI":"../lib/UI",
+            "Shell":"../fstools/Shell",
             "foo":"bar"
         },
         "baseUrl": "fs2"

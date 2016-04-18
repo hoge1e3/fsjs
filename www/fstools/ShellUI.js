@@ -16,21 +16,9 @@ define(["Shell","UI","FS","Util"], function (sh,UI,FS,Util) {
     sh.cls=function () {
         res.d.$vars.inner.empty();
     };
-    sh.setout({log:function () {
-        return $.when.apply($,arguments).then(function () {
-            var a=[];
-            for (var i=0; i<arguments.length; i++) {
-                a.push(arguments[i]);
-            }
-            if (a[0] instanceof $) {
-                out.append(a[0]);
-            } else {
-                out.append(UI("span",a.join(" ")+"\n"));
-            }
-        });
-    },err:function (e) {
-        out.append(UI("div",{"class": "shell error"},e,["br"],["pre",e.stack]));
-    }});
+    function hitBottom() {
+        res.inner.closest(".ui-dialog-content").scrollTop(res.inner.height());
+    }
 
     sh.prompt=function () {
         var line=UI("div",
@@ -41,9 +29,24 @@ define(["Shell","UI","FS","Util"], function (sh,UI,FS,Util) {
         var out=line.$vars.out;
         var cand=line.$vars.cand;
         line.appendTo(res.inner);
+        hitBottom();
         cmd.focus();
-        res.inner.closest(".ui-dialog-content").scrollTop(res.inner.height());
         //var d=new $.Deferred;
+        sh.setout({log:function () {
+           // return $.when.apply($,arguments).then(function () {
+                var a=[];
+                for (var i=0; i<arguments.length; i++) {
+                    a.push(arguments[i]);
+                }
+                if (a[0] instanceof $) {
+                    out.append(a[0]);
+                } else {
+                    out.append(UI("span",a.join(" ")+"\n"));
+                }
+            //});
+        },err:function (e) {
+            out.append(UI("div",{"class": "shell error"},e,["br"],["pre",e.stack]));
+        }});
         return;// d.promise();
         function kd(e) {
             if (e.which==9) {
@@ -63,7 +66,10 @@ define(["Shell","UI","FS","Util"], function (sh,UI,FS,Util) {
             var cs=c.split(/ +/);
             var cn=cs.shift();
             var f=sh[cn];
-            if (typeof f!="function") return out.append(cn+": command not found.");
+            if (typeof f!="function") {
+                sh.err(cn+": command not found.");
+                return sh.prompt();
+            }
             try {
                 var args=[],options=null;
                 cs.forEach(function (ce) {
@@ -86,6 +92,7 @@ define(["Shell","UI","FS","Util"], function (sh,UI,FS,Util) {
                             var tr=null;
                             var cnt=0;
                             sres.forEach(function (r) {
+                                if (typeof r!="string") return;
                                 if (!tr) tr=UI("tr").appendTo(table);
                                 tr.append(UI("td",r));
                                 cnt++;if(cnt%3==0) tr=null;
@@ -137,6 +144,7 @@ define(["Shell","UI","FS","Util"], function (sh,UI,FS,Util) {
             } else {
                 cand.text(canda.join(", "));
             }
+            hitBottom();
             //console.log(canda);
             //cmd.val(cmd.val()+"hokan");
         }

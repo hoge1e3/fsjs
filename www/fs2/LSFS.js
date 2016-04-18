@@ -1,6 +1,7 @@
 define(["FS2","PathUtil","extend","assert","Util","Content"],
         function(FS,P,extend,assert,Util,Content) {
     var LSFS = function(storage,options) {
+        assert(storage," new LSFS fail: no storage");
     	this.storage=storage;
     	this.options=options||{};
     };
@@ -60,6 +61,7 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
     LSFS.prototype.itemExists=function (path) {
         assert.is(path,P.Absolute);
         var key=this.resolveKey(path);
+        assert(this.storage,"No storage");
         return key in this.storage;
     };
     /*LSFS.prototype.inMyFS=function (path){

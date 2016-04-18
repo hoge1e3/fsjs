@@ -1,5 +1,5 @@
-define(["FS2","NativeFS","LSFS", "PathUtil","Env","assert","SFile","RootFS"],
-        function (FS,NativeFS,LSFS, P,Env,A,SFile,RootFS) {
+define(["FS2","NativeFS","LSFS", "PathUtil","Env","assert","SFile","RootFS","Content"],
+        function (FS,NativeFS,LSFS, P,Env,A,SFile,RootFS,Content) {
     var FS={};
     if (typeof window=="object") window.FS=FS;
     var rootFS;
@@ -25,7 +25,10 @@ define(["FS2","NativeFS","LSFS", "PathUtil","Env","assert","SFile","RootFS"],
         }
         rootFS=new RootFS(fs);
     };
-    FS.getRootFS=function () {return rootFS;};
+    FS.getRootFS=function () {
+        FS.init();
+        return rootFS;
+    };
     FS.get=function () {
         FS.init();
         return rootFS.get.apply(rootFS,arguments);

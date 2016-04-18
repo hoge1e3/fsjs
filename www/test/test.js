@@ -249,17 +249,17 @@ try{
            var p=c.toPlainText();
            var u=c.toURL();
            var a=c.toArrayBuffer();
-           var n=c.toNodeBuffer();
+           var n=C.hasNodeBuffer() && c.toNodeBuffer();
            console.log(path,"->",p,u,a,n);
            var c1=C.plainText(p);
            var c2=C.url(u);
            var c3=C.bin(a,"text/plain");
-           var c4=C.bin(n,"text/plain");
+           var c4=n && C.bin(n,"text/plain");
            if (path.length<2) {
                test(c1, path.concat([p]));
                test(c2, path.concat([u]));
                test(c3, path.concat([a]));
-               test(c4, path.concat([n]));
+               if (n) test(c4, path.concat([n]));
            }
         }
     }
