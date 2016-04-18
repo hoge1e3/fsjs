@@ -1,3 +1,4 @@
+if (typeof define!="function") {useGlobal=true; define=function(_,f){f();}; }
 define([],function () {
     var define,requirejs;
 	var R={};
@@ -2247,5 +2248,6 @@ define('FS',["FS2","NativeFS","LSFS", "PathUtil","Env","assert","SFile","RootFS"
 	requirejs(["FS"], function (r) {
 	  resMod=r;
 	});
+	if (typeof useGlobal!="undefined" && useGlobal) window.FS=resMod;
 	return resMod;
 });

@@ -1,0 +1,11 @@
+<script src="gen/FS.js"></script>
+<script>
+  var mydir=FS.get("/mydir/");
+  var myfile=mydir.rel("myfile.txt");  // File in localStorage
+  myfile.text("my content"); // write file
+  alert(myfile.text()); // read file
+  mydir.each(function (f) { // ls mydir
+     alert(f.name());
+  });
+</script>
+

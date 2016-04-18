@@ -1,3 +1,4 @@
+if (typeof define!="function") {useGlobal=true; define=function(_,f){f();}; }
 define([],function () {
     var define,requirejs;
 	var R={};
