@@ -217,6 +217,7 @@ SFile.prototype={
         return this.act.fs.getContentType(this.act.path);
     },
     bytes: function (b) {
+        if (Content.isBuffer(b)) return this.setBytes(b);
         return this.getBytes();
     },
     setBytes:function (b) {

@@ -5,6 +5,7 @@ define(["FS","Util","PathUtil","assert"],
         Shell.cwd=resolve(dir,true);
         return Shell.pwd();
     };
+    Shell.vars=Object.create(FS.getEnv());
     Shell.mount=function (options, path) {
         //var r=resolve(path);
         if (!options || !options.t) {
@@ -159,7 +160,24 @@ define(["FS","Util","PathUtil","assert"],
         if (e && e.stack) console.log(e.stack);
         if (Shell.outUI && Shell.outUI.err) Shell.outUI.err.apply(Shell.outUI,arguments);
     };
-
+    Shell.clone= function () {
+        var r=Object.create(this);
+        r.vars=Object.create(this.vars);
+        return r;
+    };
+    Shell.getvar=function (k) {
+        return this.vars[k];
+    };
+    Shell.get=Shell.getvar;
+    Shell.set=function (k,v) {
+        return this.vars[k]=v;
+    };
+    Shell.strcat=function () {
+        if (arguments.length==1) return arguments[0];
+        var s="";
+        for (var i=0;i<arguments.length;i++) s+=arguments[i];
+        return s;
+    };
 
     Shell.prompt=function () {};
     Shell.ASYNC={r:"SH_ASYNC"};
@@ -174,6 +192,9 @@ define(["FS","Util","PathUtil","assert"],
     if (!window.sh) window.sh=Shell;
     if (typeof process=="object") {
         sh.devtool=function () { require('nw.gui').Window.get().showDevTools();}
+        sh.cd(process.cwd().replace(/\\/g,"/"));
+    } else {
+        sh.cd("/");
     }
     return Shell;
 });

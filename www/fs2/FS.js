@@ -14,6 +14,13 @@ define(["FS2","NativeFS","LSFS", "PathUtil","Env","assert","SFile","RootFS","Con
             envVar[key]=value;
         }
     };
+    FS.getEnv=function (key) {
+        if (typeof key=="string") {
+            return envVar[key];
+        }else {
+            return envVar;
+        }
+    };
     FS.init=function (fs) {
         if (rootFS) return;
         if (!fs) {

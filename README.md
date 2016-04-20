@@ -31,19 +31,19 @@ var mydir=FS.get("C:/mydir/");// Directory in local file(Windows)
 
 ##Quick Reference for File Object
 
-`f` and `d` is a File Object which represents a file and directory respectively.
+File Object cab be get by calling `FS.get(path)`. `f` and `d` is a File Object which represents a file and directory respectively.
 `fd` can be either file or directory.
 
 * `f.text(str)`   write `str` to the file
 * `f.text()`   returns file content of the file in string 
 * `f.obj(o)` write object `o` in JSON to the file  
-* `f.obj()` returns file content as object. file should writtin in JSON 
+* `f.obj()` returns the file content as object. The content of the file should be written in JSON 
 * `f.bytes(b)` write ArrayBuffer/Buffer(node) to the file  
 * `f.bytes()` returns file content as ArrayBuffer(browser)/Buffer(node)
 * `f.getBytes({binType:ArrayBuffer})` returns file content as ArrayBuffer(both in browser and node)
 * `d.each(func)` iterates over the directory by passing each File Object to `func`
 * `d.recursive(func)` iterates over all files in the directory and its subdirectory by passing each File Object to `func`
-* `d.listFiles()` returns array of all files in the directory
+* `d.listFiles()` returns array of File Objects which represents all files in the directory
 * `d.ls()` returns array of names of all files in the directory
 * `d.rel(relPath)` returns new File Object specified by the relative path
 * `d.relPath(base)` returns the relative path of the file from the `base` File Object.

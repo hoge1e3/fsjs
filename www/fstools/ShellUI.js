@@ -1,5 +1,6 @@
-define(["Shell","UI","FS","Util"], function (sh,UI,FS,Util) {
+define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,shp) {
     var res={};
+    var sh=shParent.clone();
     res.show=function (dir) {
         var d=res.embed(dir);
         d.dialog({width:600,height:500});
@@ -21,6 +22,7 @@ define(["Shell","UI","FS","Util"], function (sh,UI,FS,Util) {
     }
 
     sh.prompt=function () {
+        var t=this;
         var line=UI("div",
             ["input",{$var:"cmd",size:40,on:{keydown: kd}}],
             ["pre",{$var:"out","class":"shell out"},["div",{$var:"cand","class":"shell cand"}]]
@@ -32,7 +34,7 @@ define(["Shell","UI","FS","Util"], function (sh,UI,FS,Util) {
         hitBottom();
         cmd.focus();
         //var d=new $.Deferred;
-        sh.setout({log:function () {
+        t.setout({log:function () {
            // return $.when.apply($,arguments).then(function () {
                 var a=[];
                 for (var i=0; i<arguments.length; i++) {
@@ -61,17 +63,17 @@ define(["Shell","UI","FS","Util"], function (sh,UI,FS,Util) {
             }
         }
         function exec() {
-            var c=cmd.val().replace(/^ */,"").replace(/ *$/,"");
-            if (c.length==0) return;
+            //var c=cmd.val().replace(/^ */,"").replace(/ *$/,"");
+            /*if (c.length==0) return;
             var cs=c.split(/ +/);
             var cn=cs.shift();
-            var f=sh[cn];
+            var f=t[cn];
             if (typeof f!="function") {
-                sh.err(cn+": command not found.");
-                return sh.prompt();
-            }
+                t.err(cn+": command not found.");
+                return t.prompt();
+            }*/
             try {
-                var args=[],options=null;
+                /*var args=[],options=null;
                 cs.forEach(function (ce) {
                     var opt=/^-([A-Za-z_0-9]+)(=(.*))?/.exec(ce);
                     if (opt) {
@@ -85,6 +87,8 @@ define(["Shell","UI","FS","Util"], function (sh,UI,FS,Util) {
                 });
                 if (options) args.push(options);
                 var sres=f.apply(sh, args);
+                */
+                var sres=t.parseCommand(cmd.val());
                 return $.when(sres).then(function (sres) {
                     if (typeof sres=="object") {
                         if (sres instanceof Array) {
@@ -104,12 +108,12 @@ define(["Shell","UI","FS","Util"], function (sh,UI,FS,Util) {
                     } else {
                         out.append(sres);
                     }
-                    sh.prompt();
+                    t.prompt();
                 });
             } catch(e) {
-                sh.err(e);
+                t.err(e);
                 //out.append(UI("div",{"class": "shell error"},e,["br"],["pre",e.stack]));
-                sh.prompt();
+                t.prompt();
             }
         }
         function comp(){
