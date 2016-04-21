@@ -6,6 +6,7 @@ var reqConf={
             "Shell":"../fstools/Shell",
             "ShellUI":"../fstools/ShellUI",
             "ShellParser":"../fstools/ShellParser",
+            "DeferredUtil":"../lib/DeferredUtil",
             "foo":"bar"
         },
         "baseUrl": "fs2"

@@ -1,6 +1,82 @@
-define(["Shell"],function (sh) {
+define(["Shell","DeferredUtil"],function (sh,DU) {
     var envMulti=/\$\{([^\}]*)\}/;
     var envSingle=/^\$\{([^\}]*)\}$/;
+    sh.enterCommand=function (s) {
+        if (!this._history) this._history=[];
+        this._history.push(s);
+        var args=this.parseCommand(s);
+        if (this._skipto) {
+            if (args[0]=="label") {
+                this.label(args[1]);
+            } else {
+                this.echo("Skipping command: "+s);
+            }
+        } else {
+            return this.evalCommand(args);
+        }
+    };
+    sh.label=function (n) {
+        this._labels=this._labels||{};
+        this._labels[n]=this._history.length;
+        if (this._skipto==n) delete this._skipto;
+    };
+    sh["goto"]=function (n,cond) {
+        if (arguments.length==1) cond=true;
+        var t=this;
+        return $.when(cond).then(function (c) {
+            if (!c) return;
+            t._labels=t._labels||{};
+            var pc=t._labels[n];
+            if (pc) {
+                if (!t._pc) {
+                    t._pc=pc;
+                    return t.gotoLoop();
+                } else {
+                    t._pc=pc;
+                }
+            } else {
+                t._skipto=n;
+            }
+        });
+    };
+    sh.gotoLoop=function () {
+        var t=this;
+        var cnt=0;
+        return DU.loop(function () {
+            if (cnt++>100) {
+                delete t._pc;
+                throw new Error("Are infinite loops scary?");
+            }
+            if (t._skipto || !t._pc || t._pc>=t._history.length) {
+                delete t._pc;
+                return DU.brk();
+            }
+            var s=t._history[t._pc++];
+            var args=t.parseCommand(s);
+            return t.evalCommand(args);
+        });
+    };
+    sh.sleep=function (t) {
+        var d=new $.Deferred;
+        t=parseFloat(t);
+        setTimeout(function () {d.resolve();},t*1000);
+        return d.promise();
+    };
+    sh.sh=function (f) {
+        var t=this;
+        var ln=f.lines();
+        return DU.each(ln,function (l) {
+            return t.enterCommand(l);
+        });
+    };
+    /*
+    set a 1
+    label loop
+    echo ${a}
+    calc add ${a} 1
+    set a ${_}
+    goto loop ( calc lt ${a} 10 )
+    */
     sh.parseCommand=function (s) {
         var space=/^\s*/;
         var nospace=/^([^\s]*(\\.)*)*/;
@@ -48,9 +124,10 @@ define(["Shell"],function (sh) {
             return args;
         }
         var args=parse();
-        console.log("parsed:",JSON.stringify(args));
+        return args;
+        /*console.log("parsed:",JSON.stringify(args));
         var res=this.evalCommand(args);
-        return res;
+        return res;*/
         function expand(s) {
             var r;
             /*if (r=envSingle.exec(s)) {
@@ -82,6 +159,7 @@ define(["Shell"],function (sh) {
     sh.evalCommand=function (expr) {
         var t=this;
         if (expr instanceof Array) {
+            if (expr.length==0) return;
             var c=expr.shift();
             var f=this[c];
             if (typeof f!="function") throw new Error(c+": Command not found");
@@ -93,27 +171,30 @@ define(["Shell"],function (sh) {
             return $.when.apply($,a).then(function () {
                 return f.apply(t,arguments);
             });
-        /*} else if (typeof expr =="string") {
-            var r=envSingle.exec(expr);
-            if (r) {
-                return this.getvar(r[1]);
-            } else {
-                var t=this;
-                return expr.replace(envMulti,function (_,v) {
-                    console.log(arguments);
-                    return t.getvar(v);
-                });
-            }*/
         } else {
             return expr;
         }   
     };
-    sh.calc=function (op,a,b) {
-        var r;
-        switch(op) {
-            case "add":r=parseFloat(a)+parseFloat(b);break;
-        }     
+    sh.calc=function (op) {
+        var i=1;
+        var r=parseFloat(arguments[i]);
+        for(i=2;i<arguments.length;i++) {
+            var b=arguments[i];
+            switch(op) {
+                case "add":r+=parseFloat(b);break;
+                case "sub":r-=parseFloat(b);break;
+                case "mul":r*=parseFloat(b);break;
+                case "div":r/=parseFloat(b);break;
+                case "lt":r=(r<b);break;
+            }     
+        }
         this.set("_",r);
         return r;
+    };
+    sh.history=function () {
+        var t=this;
+        this._history.forEach(function (e) {
+            t.echo(e);    
+        });
     };
 });

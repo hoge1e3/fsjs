@@ -63,32 +63,9 @@ define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,s
             }
         }
         function exec() {
-            //var c=cmd.val().replace(/^ */,"").replace(/ *$/,"");
-            /*if (c.length==0) return;
-            var cs=c.split(/ +/);
-            var cn=cs.shift();
-            var f=t[cn];
-            if (typeof f!="function") {
-                t.err(cn+": command not found.");
-                return t.prompt();
-            }*/
             try {
-                /*var args=[],options=null;
-                cs.forEach(function (ce) {
-                    var opt=/^-([A-Za-z_0-9]+)(=(.*))?/.exec(ce);
-                    if (opt) {
-                        if (!options) options={};
-                        options[opt[1]]=opt[3]!=null ? opt[3] : 1;
-                    } else {
-                        if (options) args.push(options);
-                        options=null;
-                        args.push(ce);
-                    }
-                });
-                if (options) args.push(options);
-                var sres=f.apply(sh, args);
-                */
-                var sres=t.parseCommand(cmd.val());
+                var sres=t.enterCommand(cmd.val());
+                cmd.blur();
                 return $.when(sres).then(function (sres) {
                     if (typeof sres=="object") {
                         if (sres instanceof Array) {
