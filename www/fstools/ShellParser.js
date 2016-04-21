@@ -62,7 +62,8 @@ define(["Shell","DeferredUtil"],function (sh,DU) {
         setTimeout(function () {d.resolve();},t*1000);
         return d.promise();
     };
-    sh.sh=function (f) {
+    sh.include=function (f) {
+        f=this.resolve(f,true);
         var t=this;
         var ln=f.lines();
         return DU.each(ln,function (l) {

@@ -130,6 +130,18 @@ define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,s
             //cmd.val(cmd.val()+"hokan");
         }
     };
+    sh.edit=function (f) {
+        f=this.resolve(f);
+        var u=UI("div",
+            ["div",["textarea",{rows:10,cols:60,$var:"prog"}]],
+            ["div",["button",{on:{click:save}},"Save"]]
+        );
+        if (f.exists()) u.$vars.prog.val(f.text());
+        return this.echo(u);
+        function save() {
+            f.text( u.$vars.prog.val() );
+        }
+    };
     sh.window=function () {
         res.show(sh.cwd);
     };
