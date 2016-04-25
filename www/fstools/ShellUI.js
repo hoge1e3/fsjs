@@ -162,19 +162,42 @@ define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,s
     sh.open=function (f) {
         f=this.resolve(f,true);
         var x=$($.parseXML(f.text()));
-        var h=x.find("head");
-        var b=x.find("body")[0].innerHTML;
         var i;
         this.echo(i=UI("iframe"));
-        var idoc=i[0].contentWindow.document;
-        h.children().each(function () {
-            window.scr=this;
-            console.log(this,this.tagName,this.childNodes[0].textContent);
-            var e=idoc.createElement(this.tagName);
-            e.appendChild(idoc.createTextNode(this.childNodes[0].textContent));
-            idoc.head.appendChild(e);//innerHTML=h;
-        });
-        idoc.body.innerHTML=b;
+        var iwin=i[0].contentWindow;
+        var idoc=iwin.document;
+        var base=f.up();
+
+        appendTo($(x).find("head")[0], idoc.head);
+        appendTo($(x).find("body")[0], idoc.body);
+        function appendTo(src,dst) {
+            var c=src.childNodes;
+            for (var i=0;i<c.length ; i++) {
+                var n=c[i];
+                if (n.tagName) {
+                    var nn=idoc.createElement(n.tagName);
+                    var at=n.attributes;
+                    for (var j=0;j<at.length;j++) {
+                        var name=at[j].name, value=at[j].value;
+                        if (name=="src" && FS.PathUtil.isRelativePath(value)) {
+                            var sfile=base.rel(value);
+                            value=str2blobURL(sfile.bytes(),  sfile.contentType());
+                            console.log("blob",sfile, value);
+                        } 
+                        nn.setAttribute(name, value);
+                    }
+                    appendTo(n ,nn);
+                    dst.appendChild(nn);
+                } else {
+                    dst.appendChild(idoc.createTextNode(n.textContent));
+                }
+            }
+        }
+        function str2blobURL(src, ctype) {
+            var blob = new iwin.Blob([src], {type: ctype||'text/plain'});
+            var url = iwin.URL.createObjectURL(blob);
+            return url;
+        }
         window.ifrm=i[0];
     };
     return res;

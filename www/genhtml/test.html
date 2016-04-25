@@ -3,26 +3,28 @@
 <script src="jquery-1.12.3.min.js"></script>
 <script>
   function render(src) {
-     var x=$.parseXML(src);
-     window.parsed=x;
-     var d=document;
-     appendTo($(x).find("head")[0], d.head);
-     appendTo($(x).find("body")[0], d.body);
+    var x=$.parseXML(src);
+    window.parsed=x;
+    var d=document;
+    appendTo($(x).find("head")[0], d.head);
+    appendTo($(x).find("body")[0], d.body);
   }
   function appendTo(src,dst) {
-     var c=src.childNodes;
-     for (var i=0;i<c.length ; i++) {
+    var c=src.childNodes;
+    for (var i=0;i<c.length ; i++) {
         var n=c[i];
-        console.log(n, n.tagName);
         if (n.tagName) {
             var nn=document.createElement(n.tagName);
-            if (n.tagName=="font") window.font=n;
+            var at=n.attributes;
+            for (var i=0;i<at.length;i++) {
+                nn.setAttribute(at[i].name,at[i].value);
+            }
             dst.appendChild(nn);
             appendTo(n ,nn);
         } else {
             dst.appendChild(document.createTextNode(n.textContent));
-	}
-     }
+        }
+    }
   }
 </script>
 <script>

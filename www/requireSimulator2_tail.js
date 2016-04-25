@@ -3,6 +3,7 @@
 	requirejs(["FS"], function (r) {
 	  resMod=r;
 	});
-	if (typeof useGlobal!="undefined" && useGlobal) window.FS=resMod;
+	if (useGlobal) global.FS=resMod;
 	return resMod;
 });
+})(window);

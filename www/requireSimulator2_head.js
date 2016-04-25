@@ -1,4 +1,6 @@
-if (typeof define!="function") {useGlobal=true; define=function(_,f){f();}; }
+(function (global) {
+var useGlobal=(typeof global.define!="function");
+var define=(useGlobal ? define=function(_,f){f();} : global.define);
 define([],function () {
     var define,requirejs;
 	var R={};
