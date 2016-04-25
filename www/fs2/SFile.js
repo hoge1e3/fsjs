@@ -300,6 +300,10 @@ SFile.prototype={
         var dir=this.assertDir();
         dir.listFiles(options).forEach(f);
     },
+    eachrev:function (f,options) {
+        var dir=this.assertDir();
+        dir.listFiles(options).reverse().forEach(f);
+    },
     recursive:function (fun,options) {
         var dir=this.assertDir();
         dir.each(function (f) {

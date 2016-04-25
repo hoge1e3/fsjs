@@ -159,5 +159,23 @@ define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,s
             return oldcat.apply(sh,arguments);
         }
     };
+    sh.open=function (f) {
+        f=this.resolve(f,true);
+        var x=$($.parseXML(f.text()));
+        var h=x.find("head");
+        var b=x.find("body")[0].innerHTML;
+        var i;
+        this.echo(i=UI("iframe"));
+        var idoc=i[0].contentWindow.document;
+        h.children().each(function () {
+            window.scr=this;
+            console.log(this,this.tagName,this.childNodes[0].textContent);
+            var e=idoc.createElement(this.tagName);
+            e.appendChild(idoc.createTextNode(this.childNodes[0].textContent));
+            idoc.head.appendChild(e);//innerHTML=h;
+        });
+        idoc.body.innerHTML=b;
+        window.ifrm=i[0];
+    };
     return res;
 });
