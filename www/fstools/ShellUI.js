@@ -159,17 +159,29 @@ define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,s
             return oldcat.apply(sh,arguments);
         }
     };
+    sh.usopen=function (){
+        this.echo(UI("iframe").attr("src","http://jsrun.it/hoge1e4/qgNZ"));
+    };
     sh.open=function (f) {
         f=this.resolve(f,true);
         var x=$($.parseXML(f.text()));
         var i;
         this.echo(i=UI("iframe"));
-        var iwin=i[0].contentWindow;
-        var idoc=iwin.document;
+        //i.attr("src","blank.html");
         var base=f.up();
-
-        appendTo($(x).find("head")[0], idoc.head);
-        appendTo($(x).find("body")[0], idoc.body);
+        var iwin;
+        var idoc;
+        //i.on("load",function () {
+            iwin=i[0].contentWindow;
+            idoc=iwin.document;
+            appendTo($(x).find("head")[0], idoc.head);
+            appendTo($(x).find("body")[0], idoc.body);
+        //});
+        function injectScript(src) {
+            var nn=idoc.createElement("script");
+            nn.appendChild(idoc.createTextNode(src));
+            idoc.head.appendChild(nn);
+        }
         function appendTo(src,dst) {
             var c=src.childNodes;
             for (var i=0;i<c.length ; i++) {
@@ -181,7 +193,7 @@ define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,s
                         var name=at[j].name, value=at[j].value;
                         if (name=="src" && FS.PathUtil.isRelativePath(value)) {
                             var sfile=base.rel(value);
-                            value=str2blobURL(sfile.bytes(),  sfile.contentType());
+                            value=file2blobURL(sfile);
                             console.log("blob",sfile, value);
                         } 
                         nn.setAttribute(name, value);
@@ -193,8 +205,13 @@ define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,s
                 }
             }
         }
-        function str2blobURL(src, ctype) {
-            var blob = new iwin.Blob([src], {type: ctype||'text/plain'});
+        function file2blobURL(sfile) {
+            var blob;
+            if (sfile.isText()) {
+                blob = new iwin.Blob([sfile.text()], {type: sfile.contentType()});
+            } else {
+                blob = new iwin.Blob([sfile.bytes()], {type: sfile.contentType()});
+            }
             var url = iwin.URL.createObjectURL(blob);
             return url;
         }

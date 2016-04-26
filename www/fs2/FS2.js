@@ -167,6 +167,17 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
             var e=P.ext(path);
             return M[e] || (options||{}).def || "text/plain";
         },
+        getBlob: function (path, options) {
+            var c=this.getContent(path);
+            options=options||{};
+            options.blobType=options.blobType||Blob;
+            options.binType=options.binType||ArrayBuffer;
+            if (c.hasPlainText()) {
+                return new options.blobType([c.toPlainText()],this.getContentType(path));
+            } else {
+                return new options.blobType([c.toBin(options.binType)],this.getContentType(path));
+            }
+        },
         isText:function (path) {
             var m=this.getContentType(path);
             return P.startsWith( m, "text");
