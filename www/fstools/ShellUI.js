@@ -189,15 +189,26 @@ define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,s
                 if (n.tagName) {
                     var nn=idoc.createElement(n.tagName);
                     var at=n.attributes;
+                    // should charset must be set first than src
+                    var names=[];
                     for (var j=0;j<at.length;j++) {
-                        var name=at[j].name, value=at[j].value;
+                        names.push(at[j].name);
+                    }
+                    var idx=names.indexOf("charset");
+                    if (idx>=0) { 
+                        names.splice(idx,1); 
+                        names.unshift("charset"); 
+                    }
+                    console.log("names", names);
+                    names.forEach(function (name) {
+                        var value=n.getAttribute(name);
                         if (name=="src" && FS.PathUtil.isRelativePath(value)) {
                             var sfile=base.rel(value);
                             value=file2blobURL(sfile);
                             console.log("blob",sfile, value);
                         } 
                         nn.setAttribute(name, value);
-                    }
+                    });
                     appendTo(n ,nn);
                     dst.appendChild(nn);
                 } else {
