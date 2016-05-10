@@ -87,7 +87,7 @@ SFile.prototype={
                 base );
         return P.relPath(this.path(), A.is(bp,P.Absolute) );
     },
-    up:function () {
+    up: function () {
         var pathR=this.path();
         var pa=P.up(pathR);
         if (pa==null) return null;
@@ -98,6 +98,9 @@ SFile.prototype={
         this.assertDir();
         var pathR=this.path();
         return this._resolve(P.rel(pathR, relPath));
+    },
+    sibling: function (n) {
+        return this.up().rel(n);  
     },
     startsWith: function (pre) {
         return P.startsWith(this.name(),pre);

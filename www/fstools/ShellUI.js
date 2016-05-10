@@ -165,18 +165,21 @@ define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,s
     sh.open=function (f) {
         f=this.resolve(f,true);
         var x=$($.parseXML(f.text()));
-        var i;
-        this.echo(i=UI("iframe"));
+        var i=UI("iframe");
         //i.attr("src","blank.html");
         var base=f.up();
         var iwin;
         var idoc;
-        //i.on("load",function () {
+        var d=new $.Deferred;
+        window.ifrm=i[0];
+        i.on("load",function () {
             iwin=i[0].contentWindow;
             idoc=iwin.document;
             appendTo($(x).find("head")[0], idoc.head);
             appendTo($(x).find("body")[0], idoc.body);
-        //});
+            d.resolve(i[0]);
+        });
+        this.echo(i);
         function injectScript(src) {
             var nn=idoc.createElement("script");
             nn.appendChild(idoc.createTextNode(src));
@@ -184,6 +187,7 @@ define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,s
         }
         function appendTo(src,dst) {
             var c=src.childNodes;
+            console.log("appendto",c,c.length);
             for (var i=0;i<c.length ; i++) {
                 var n=c[i];
                 if (n.tagName) {
@@ -226,7 +230,7 @@ define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,s
             var url = iwin.URL.createObjectURL(blob);
             return url;
         }
-        window.ifrm=i[0];
+        return d.promise();
     };
     return res;
 });
