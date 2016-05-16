@@ -109,6 +109,7 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
         }
         if (!trashed) delete dinfo[name].trashed;
         dinfo[name].lastUpdate = now();
+        this.getRootFS().notifyChanged(P.rel(path,name), dinfo[name]);
         this.putDirInfo(path, dinfo, trashed);
     };
     LSFS.prototype.removeEntry=function removeEntry(dinfo, path, name) { // path:path of dinfo
@@ -312,6 +313,20 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
         },
         getURL: function (path) {
             return this.getContent(path).toURL();
+        },
+        getDirTree: function (path,dest) {
+            assert.is(path,P.AbsDir);
+            dest=dest||{};
+            var d=this.getDirInfo(path);
+            for (var f in d) {
+                var p=P.rel(path,f);
+                if (this.isDir(p)) {// TODO symlink not follow(and no entry in dest)
+                    this.getDirTree(p,dest);
+                } else {
+                    dest[p]=d[f];
+                }
+            }
+            return dest;
         }
     });
     return LSFS;

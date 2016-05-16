@@ -1,6 +1,6 @@
 <?php
 class DtlThread {
-    var $stack;
+    /*var $stack;
     public function __construct() {
         $this->stack=array();
     }
@@ -9,12 +9,9 @@ class DtlThread {
     } 
     public function pop() {
         return array_pop($this->stack);
-    } 
-    public function createBlock($scope,$code) {
-        $b=new DtlBlock($this, $scope,$code); 
-        return $b;
-    }
-    public function run($self,$block,&$args) {
+    } */
+    public static function run($self,$block,$args) {
+        $stack=new DtlArray;
         $scope=$block->scope->create();//DtlObj::create($block->scope);
         $scope->self=$self;
         $scope->arguments=$args;
@@ -25,64 +22,68 @@ class DtlThread {
             switch ($c[0]) {
             //pushi (immedeate) 
             case "pushi":
-                $this->push($c[1]);
+                $stack->push($c[1]);
                 break;
             //push1 nameid (local)
             case "push1":
                 $name=$c[1];
-                $this->push(DtlObj::s_get($scope,$name));
+                $stack->push(DtlObj::s_get($scope,$name));
                 break;
             //[obj] push2 nameid
             case "push2":
                 $name=$c[1];
-                $obj=$this->pop();
-                $this->push(DtlObj::s_get($obj,$name));
+                $obj=$stack->pop();
+                $stack->push(DtlObj::s_get($obj,$name));
                 break;
             //pushb blockid  (with dtlbind)
             case "pushb":
-                $this->push( $this->createBlock($scope,$c[1]) );
+                $stack->push(new DtlBlock($scope,$c[1]) );
                 break;
             //[obj] [arg1] .... [argN] send #N,$nameid   
             case "send":
                 $n=$c[1];
                 $name=$c[2];
                 $args=array();
-                for ($i=0;$i<$n;$i++) array_unshift($args,$this->pop());
+                for ($i=0;$i<$n;$i++) array_unshift($args,$stack->pop());
                 //$obj=$this->stack[count($this->stack)-($n+1)];
-                $obj=$this->pop();
-                if ($obj instanceof DtlObj) {
-                    $f=DtlObj::s_get($obj,$name);
-                    if ($f instanceof DtlBlock) {
-                        $this->push($this->run($obj,$f,$args));
-                    } else {
-                        throw new Exception("$name はメソッドではありません");
-                    }
+                $obj=$stack->pop();
+                if (is_float($obj) || is_int($obj)) {
+                    $obj=new DtlNumber($obj);
+                } else if (is_string($obj)) {
+                    $obj=new DtlString($obj);
+                }
+                if (!is_object($obj)) {
+                    throw new Exception("オブジェクトではない値にメソッド$nameを呼び出しています");
+                }
+                $f=DtlObj::s_get($obj,$name);
+                if ($f instanceof DtlBlock) {
+                    $stack->push(self::run($obj,$f,$args));
+                } else if (method_exists($obj,$name)) {
+                    $stack->push(call_user_func_array(array($obj,$name),$args));
                 } else {
-                    if (is_float($obj) || is_int($obj)) {
-                        $obj=new DtlNumber($obj);
-                    }
-                    if (is_object($obj) && method_exists($obj,$name)) {
-                        $this->push(call_user_func_array(array($obj,$name),$args));
-                    } else {
-                        throw new Exception("$name はメソッドではありません");
-                    }
+                    throw new Exception("$obj::$name はメソッドではありません");
                 }
                 break;
             // ret
             case "ret":
-                return $this->pop();
+                return $stack->pop();
             // [val] store1 nameid 
             case "store1":
                 $name=$c[1];
-                $val=$this->pop();
-                DtlObj::s_set($scope,$name,$val);
+                $layer=$c[2];
+                $val=$stack->pop();
+                $sscope=$scope;
+                while ($layer-->0) $sscope=$sscope->__proto__;
+                DtlObj::s_set($sscope,$name,$val);
+                $stack->push($val);
                 break;
             //[obj] [val] store2 nameid (obj.nameid=val)
             case "store2":
                 $name=$c[1];
-                $val=$this->pop();
-                $obj=$this->pop();
-                DtlObj::s_set($scope,$name,$val);
+                $val=$stack->pop();
+                $obj=$stack->pop();
+                DtlObj::s_set($obj,$name,$val);
+                $stack->push($val);
                 break;
             case "para":
                 $name=$c[1];
@@ -91,12 +92,13 @@ class DtlThread {
             case "tmp":
                 $name=$c[1];
                 DtlObj::s_set($scope, $name, 0);
-                break;                
+                break;
+            case "pop":
+                $n=$c[1];
+                while($n--) $stack->pop();
+                break;
             }
         } 
-/*
-[N]...[1] pop #N
-*/
     }
 }
 ?>

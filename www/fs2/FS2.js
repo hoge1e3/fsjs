@@ -150,6 +150,7 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
                     var fs=this.resolveFS(path);
                     //console.log(n, f.fs===this  ,f.fs, this);
                     if (fs!==this) {
+                        console.log("Invoked for other fs",this.mountPoint, fs.mountPoint)
                         //arguments[0]=f.path;
                         return fs[n].apply(fs, arguments);
                     } else {
@@ -236,13 +237,29 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
         },
         isLink: function (path) {
             return null;
-        }//,
+        },
+        getDirTree: function (path, dest) {
+            dest=dest||{};
+            assert.is(path, P.AbsDir);
+            var ls=this.opendir(path);
+            var t=this;
+            ls.forEach(function (f) {
+                var p=P.rel(path,f);
+                if (t.isDir(p)) {
+                    t.getDirTree(p,dest);
+                } else {
+                    dest[p]=t.getMetaInfo(p);
+                }
+            });
+            return dest;
+        }
         /*get: function (path) {
             assert.eq(this.resolveFS(path), this);
             return new SFile(this, path);
             //var r=this.resolveFS(path);
             //return new SFile(r.fs, r.path);
         }*/
+        
     });
     return FS;
 });

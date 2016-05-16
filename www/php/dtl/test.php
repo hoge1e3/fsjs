@@ -11,14 +11,18 @@ class Test{
 }
 class Num {
     public $value;
-    public function add() {
+    public function else() {
         
     }
 }
 $t=new Test;
-$th=new DtlThread;
+$kana="else";
+$t->$kana=5;
+echo $t->$kana;
+
+/*$th=new DtlThread;
 $root=new DtlObj;
-$b=$th->createBlock($root,array(
+$b=new DtlBlock($root,array(
     array("pushi", 2), array("pushi",3),array("send",1,"mul"),
     array("store1","x"),
     array("pushi", 31), array("store1","y"),
@@ -29,6 +33,14 @@ $b=$th->createBlock($root,array(
 ) );
 $args=array();
 echo $th->run($root,$b,$args );   // DtlObj::call($d, array(3,5), "hoge");
-
-
+*/
+/*echo "!".is_int("123"+0);
+echo "!".is_float("123"+0);
+echo "!".is_int("123.4"+0);
+echo "!".is_float("123.4"+0);*/
+/*echo "!".is_string("123");
+echo "!".is_int("123");
+echo "!".is_int(123);
+echo "!".is_string("ABC123");
+echo "!".is_int("ABC123");*/
 ?></pre>

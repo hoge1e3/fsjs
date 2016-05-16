@@ -51,6 +51,16 @@ define(["assert","FS2","PathUtil","SFile"], function (assert,FS,P,SFile) {
             get: function (path) {
                 assert.is(path,P.Absolute);
                 return new SFile(this.resolveFS(path), path);
+            },   
+            addObserver: function (f) {
+                this.observers=this.observers||[];
+                this.observers.push(f);
+            },
+            notifyChanged: function (path,metaInfo) {
+                if (!this.observers) return;
+                this.observers.forEach(function (f) {
+                    f(path,metaInfo);
+                });
             }
     };
     for (var i in p) {
