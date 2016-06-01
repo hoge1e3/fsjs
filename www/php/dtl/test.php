@@ -1,6 +1,15 @@
 <pre>
 <?php
-require_once"DtlNumber.php";
+$a=array();
+$a[10]=35;
+$a[1]=3;
+$a[10]=32;
+array_push($a,51);
+echo count($a);
+foreach ($a as $k=>$v) {
+    print (is_int($k)?"N":"S")."$k=>$v";
+}
+/*require_once"DtlNumber.php";
 require_once"DtlObj.php";
 require_once"DtlBlock.php";
 require_once"DtlThread.php";
@@ -19,7 +28,7 @@ $t=new Test;
 $kana="else";
 $t->$kana=5;
 echo $t->$kana;
-
+*/
 /*$th=new DtlThread;
 $root=new DtlObj;
 $b=new DtlBlock($root,array(

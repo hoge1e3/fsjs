@@ -1,4 +1,5 @@
-define(["Shell","UI","FS","Util","ShellParser"], function (shParent,UI,FS,Util,shp) {
+define(["Shell","UI","FS","Util","ShellParser"], 
+function (shParent,UI,FS,Util,shp) {
     var res={};
     var sh=shParent.clone();
     res.show=function (dir) {

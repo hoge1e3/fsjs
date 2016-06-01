@@ -1868,8 +1868,9 @@ var requirejs, require, define;
                 node.addEventListener('load', context.onScriptLoad, false);
                 node.addEventListener('error', context.onScriptError, false);
             }
-            node.src = url;
-            if (typeof window=="object" && window.location.href.match(/^http/)) {
+            node.src = (typeof LocalIframeInfo=="object") ? 
+            LocalIframeInfo.convertURL(url) : url;
+            if (typeof window=="object" && window.location.href.match(/^http.*localhost/)) {
                 node.src += "?"+Math.random();
             }
 

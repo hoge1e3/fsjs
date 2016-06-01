@@ -65,10 +65,13 @@ class SFile{
     public function metaInfo() {
     }
     public function getMetaInfo() {
+        return $this->fs->getMetaInfo($this->path());
     }
     public function setMetaInfo() {
     }
     public function lastUpdate() {
+        $m=$this->getMetaInfo();
+        return $m["lastUpdate"];
     }
     public function exists() {
     }
@@ -78,20 +81,26 @@ class SFile{
     }
     public function isDir() {
     }
-    public function text() {
-    }
-    public function setText($s) {
-        $this->check("write");
-        return $this->fs->setContent($this->path(), $s);
-    }
     public function getContent() {
     }
     public function setContent() {
+    }
+    public function setText($s) {
+        $this->check("write");
+        $this->fs->setContent($this->path(), $s);
+        return $this;
     }
     public function getText() {
         $this->check("read");
         //echo "open ".$this->path();
         return $this->fs->getContent($this->path());
+    }
+    public function text() {
+        if (func_num_args()==0) {
+            return $this->getText();
+        } else {
+            return $this->setText(func_get_args(0));
+        }
     }
     public function isText() {
     }
@@ -107,7 +116,20 @@ class SFile{
     }
     public function lines() {
     }
+    public function getObj() {
+        $j=new Services_JSON;
+        return $j->decode($this->getText());
+    }
+    public function setObj($obj) {
+        $j=new Services_JSON;
+        return $this->setText($j->encode($obj));
+    }
     public function obj() {
+        if (func_num_args()==0) {
+            return $this->getObj();
+        } else {
+            return $this->setObj(func_get_args(0));
+        }
     }
     public function copyFrom() {
     }
@@ -134,12 +156,12 @@ class SFile{
         $res=array();
         foreach ($l as $e) {
             $f=$this->rel($e);
-            array_push($f);
+            array_push($res,$f);
         }
         return $res;
     }
     public function ls() {
-        return $this->fs->ls();
+        return $this->fs->ls($this->path());
     }
     public function convertOptions() {
     }

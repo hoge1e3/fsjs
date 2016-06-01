@@ -1,18 +1,11 @@
 <?php
 class DtlThread {
-    /*var $stack;
-    public function __construct() {
-        $this->stack=array();
-    }
-    public function push($v) {
-        array_push($this->stack,$v);
-    } 
-    public function pop() {
-        return array_pop($this->stack);
-    } */
+    public static $methodMap=array(
+        "else"=>"_else","while"=>"_while","use"=>"_use"
+    ); 
     public static function run($self,$block,$args) {
         $stack=new DtlArray;
-        $scope=$block->scope->create();//DtlObj::create($block->scope);
+        $scope=$block->__scope->create();//DtlObj::create($block->scope);
         $scope->self=$self;
         $scope->arguments=$args;
         //echo count($block->code);
@@ -22,7 +15,7 @@ class DtlThread {
             switch ($c[0]) {
             //pushi (immedeate) 
             case "pushi":
-                $stack->push($c[1]);
+                $stack->push(DtlUtil::wrap($c[1]));
                 break;
             //push1 nameid (local)
             case "push1":
@@ -53,15 +46,17 @@ class DtlThread {
                     $obj=new DtlString($obj);
                 }
                 if (!is_object($obj)) {
-                    throw new Exception("オブジェクトではない値にメソッド$nameを呼び出しています");
+                    throw new Exception("オブジェクトではない値にメソッド".$name."を呼び出しています");
                 }
                 $f=DtlObj::s_get($obj,$name);
+                $mmapped=isset(self::$methodMap[$name])?self::$methodMap[$name]:$name;
                 if ($f instanceof DtlBlock) {
                     $stack->push(self::run($obj,$f,$args));
-                } else if (method_exists($obj,$name)) {
-                    $stack->push(call_user_func_array(array($obj,$name),$args));
+                } else if (method_exists($obj,$mmapped)) {
+                    $stack->push(DtlUtil::wrap(
+                        call_user_func_array(array($obj,$mmapped),$args)));
                 } else {
-                    throw new Exception("$obj::$name はメソッドではありません");
+                    throw new Exception($obj."::".$name."はメソッドではありません");
                 }
                 break;
             // ret

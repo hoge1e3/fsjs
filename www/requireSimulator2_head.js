@@ -1,6 +1,8 @@
-(function (global) {
-var useGlobal=(typeof global.define!="function");
-var define=(useGlobal ? define=function(_,f){f();} : global.define);
+// This is kowareta! because r.js does not generate module name:
+//   define("FSLib",[], function () { ... 
+//(function (global) {
+//var useGlobal=(typeof global.define!="function");
+//var define=(useGlobal ? define=function(_,f){f();} : global.define);
 define([],function () {
     var define,requirejs;
 	var R={};

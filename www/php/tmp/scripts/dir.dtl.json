@@ -1,0 +1,5 @@
+[["push1","self"],
+["push1","self"],["push2","root"],["send",0,"create"],["store2","dir"],["pop",1],
+["push1","self"],["push2","dir"],
+["pushb",[["para","d"],["push1","d"],["send",0,"listFiles"],["pushb",[["para","f"],["push1","f"],["send",0,"name"],["ret"]]],["send",1,"map"],["ret"]]],
+["store2","list"],["pop",1]]

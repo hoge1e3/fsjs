@@ -5,7 +5,10 @@ var reqConf={
             "UI":"../lib/UI",
             "Shell":"../fstools/Shell",
             "ShellUI":"../fstools/ShellUI",
+            "LocalIframe":"../fstools/LocalIframe",
+            "LocalBrowser":"../fstools/LocalBrowser",
             "ShellParser":"../fstools/ShellParser",
+            "wget":"../fstools/wget",
             "DeferredUtil":"../lib/DeferredUtil",
             "foo":"bar"
         },

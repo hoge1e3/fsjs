@@ -1,21 +1,35 @@
 <?php
 class DtlBlock {
-    public $scope;
+    public $__scope;
     public $code;
     public function __construct($s,$c) {
-        $this->scope=$s;
+        $this->__scope=$s;
         $this->code=$c;
     }
     public function execute() {
         $args=array();
         $n=func_num_args();
         for ($i=0;$i<$n;$i++) array_push($args,func_get_arg($i));
-        return DtlThread::run($this->scope->self, $this ,$args);
+        return DtlThread::run($this->__scope->self, $this ,$args);
     }
     public function then() {
         $res=$this->execute();
         return $res ? (new DtlTrue): (new DtlFalse);
     }
+    public function _while() {
+        return new DtlWhile($this);
+    }
+}
+class DtlWhile {
+    public function DtlWhile($block){
+    	$this->block=$block;
+    }
+	public function execute($func){
+		while($this->block->execute()){
+			$res=$func->execute();
+		}
+    	return $res;
+	}
 }
 class DtlTrue {
     public function _else($func) {
@@ -27,6 +41,9 @@ class DtlTrue {
 	public function then($func){
 		return $func->then();
 	}
+	public function __toString() {
+	    return "DtlTrue";
+	}
 }
 class DtlFalse {
     public function _else($func) {
@@ -37,6 +54,9 @@ class DtlFalse {
     }
 	public function then($func){
 		return $func->then();
+	}
+	public function __toString() {
+	    return "DtlFalse";
 	}
 }
 class DtlDone {
@@ -52,6 +72,9 @@ class DtlDone {
     }
 	public function then($func){
 		return $this;
+	}
+	public function __toString() {
+	    return "DtlDone";
 	}
 }
 

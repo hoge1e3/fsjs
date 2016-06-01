@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="css/jquery-ui.css">
 <script>
 requirejs.config(reqConf);
-requirejs(["ShellUI"], function(shui){
+requirejs(["ShellUI","wget","LocalBrowser"], function(shui,wget,lcb){
     shui.show();
 });
 

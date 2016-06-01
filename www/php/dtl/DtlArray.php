@@ -13,10 +13,18 @@ class DtlArray {
         return $r;
     }
     public function each($b) {
-        for ($i=0;$i<count($this->raw);$i++) {
-            $b.execute($this->raw[$i],$i);
+        foreach ($this->raw as $k=>$v) {
+            $b->execute($v,is_int($k) ? $k+1 : $k);
         }
     }
+    public function map($b) {
+        $a=new DtlArray;
+        foreach ($this->raw as $k=>$v) {
+            $a->push( $b->execute($v,is_int($k) ? $k+1 : $k) );
+        }
+        return $a;
+    }
+
     public function push($e) {
         array_push($this->raw, $e);
         return $this;
@@ -32,16 +40,18 @@ class DtlArray {
         return array_shift($this->raw);
     }
     public function get($i1) {
-        return $this->raw[$i1-1];
+        return $this->raw[is_int($i1)? $i1-1 : $i1];
     }
     public function set($i1,$v) {
-        return $this->raw[$i1-1]=$v;
+        $this->raw[is_int($i1)? $i1-1 : $i1]=$v;
+        return $this;
     }
     public function get0($i) {
         return $this->raw[$i];
     }
     public function set0($i,$v) {
-        return $this->raw[$i]=$v;
+        $this->raw[$i]=$v;
+        return $this;
     }
     public function size() {
         return count($this->raw);

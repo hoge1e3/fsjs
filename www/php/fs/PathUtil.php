@@ -48,5 +48,8 @@ class PathUtil {
         array_pop($ps);
         return join(self::SEP,$ps).self::SEP;
   }
+  public static function name($path) {
+        return array_pop(self::splitPath($path));
+  }
 }
 ?>
