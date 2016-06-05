@@ -2,6 +2,7 @@ define(["Shell", "FS","DeferredUtil","UI"],function (sh,FS,DU,UI) {
     var LocalBrowser={};
     var F=DU.tr;
     LocalBrowser=function (dom,options) {
+        this.iframeAttr=options||{};
         this.iframeArea=dom;//=UI("iframe");
     };
     p=LocalBrowser.prototype;
@@ -16,6 +17,7 @@ define(["Shell", "FS","DeferredUtil","UI"],function (sh,FS,DU,UI) {
             src=options.onparse(src,document);
         }
         var i=$("<iframe>");
+        i.attr(this.iframeAttr);
         var base=f.up();
         var iwin;
         var idoc;
@@ -115,12 +117,12 @@ define(["Shell", "FS","DeferredUtil","UI"],function (sh,FS,DU,UI) {
         var url = iwin.URL.createObjectURL(blob);
         return url;
     };
-    if (typeof sh=="object") sh.browser=function (f) {
+    if (typeof sh=="object") sh.browser=function (f,options) {
         f=this.resolve(f,true);
         var d=new $.Deferred;
         var place=$("<div>");
         this.echo(place);
-        var ifrm=new LocalBrowser(place);
+        var ifrm=new LocalBrowser(place,options);
         ifrm.open(f,{onload:function () {
             d.resolve();            
         },onerror:function (e) {
