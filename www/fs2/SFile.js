@@ -116,7 +116,7 @@ SFile.prototype={
     },
     //Common
     touch: function () {
-        this.act.fs.touch(this.act.path);
+        return this.act.fs.touch(this.act.path);
     },
     isReadOnly: function () {
         return this.act.fs.isReadOnly(this.act.path);
@@ -363,7 +363,7 @@ SFile.prototype={
         return A.is(options,{excludes:{}});
     },
     mkdir: function () {
-        this.touch();
+        return this.touch();
     },
     link: function (to,options) {// % ln to path
         if (this.exists()) throw new Error(this.path()+": exists.");

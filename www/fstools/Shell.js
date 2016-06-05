@@ -178,6 +178,10 @@ define(["FS","Util","PathUtil","assert"],
         for (var i=0;i<arguments.length;i++) s+=arguments[i];
         return s;
     };
+    Shell.exists=function (f) {
+        f=this.resolve(f);
+        return f.exists();
+    };
 
     Shell.prompt=function () {};
     Shell.ASYNC={r:"SH_ASYNC"};

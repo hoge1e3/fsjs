@@ -1,5 +1,6 @@
 define(["Shell", "FS","DeferredUtil","UI"],function (sh,FS,DU,UI) {
     var LocalBrowser={};
+    var F=DU.tr;
     LocalBrowser=function (dom,options) {
         this.iframeArea=dom;//=UI("iframe");
     };
@@ -7,8 +8,13 @@ define(["Shell", "FS","DeferredUtil","UI"],function (sh,FS,DU,UI) {
     p.open=function (f,options) {    
         options=options||{};
         var onload=options.onload || function () {};
+        var onerror=options.onerror || function () {};
         delete options.onload;
-        var x=$($.parseXML(f.text()));
+        var dp=new DOMParser;
+        var src=dp.parseFromString(f.text(),"text/html");
+        if (options.onparse) {
+            src=options.onparse(src,document);
+        }
         var i=$("<iframe>");
         var base=f.up();
         var iwin;
@@ -17,7 +23,7 @@ define(["Shell", "FS","DeferredUtil","UI"],function (sh,FS,DU,UI) {
         window.ifrm=i[0];
         i.on("load",function () {
             iwin=i[0].contentWindow;
-            iwin.LocalIframeInfo={
+            iwin.LocalBrowserInfo={
                 __file__: f,
                 browser: thiz,
                 open: function (url) {
@@ -32,19 +38,19 @@ define(["Shell", "FS","DeferredUtil","UI"],function (sh,FS,DU,UI) {
                 }
             };
             idoc=iwin.document;
-            return $.when().then(function () {
-                return appendTo($(x).find("head")[0], idoc.head);
-            }).then(function (){
-                return appendTo($(x).find("body")[0], idoc.body);
-            }).then(function () {
+            return $.when().then(F(function () {
+                return appendTo(src.getElementsByTagName("head")[0], idoc.head);
+            })).then(F(function (){
+                return appendTo(src.getElementsByTagName("body")[0], idoc.body);
+            })).then(F(function () {
                 onload.apply(i,[]);
-            });
+            })).fail(onerror);
         });
         $(this.iframeArea).empty().append(i);
-        return i;
+        return i[0];
         function appendTo(src,dst) {
             var c=src.childNodes;
-            return DU.loop(function (i){
+            return DU.tryLoop(function (i){
                 var d;
                 if (!(i<c.length)) return DU.brk();
                 var n=c[i];
@@ -64,14 +70,14 @@ define(["Shell", "FS","DeferredUtil","UI"],function (sh,FS,DU,UI) {
                     }
                     names.forEach(function (name) {
                         var value=n.getAttribute(name);
-                        if (n.tagName=="a" && name=="href" && 
+                        if (n.tagName.toLowerCase()=="a" && name=="href" && 
                         FS.PathUtil.isRelativePath(value)) {
-                            value="javascript:LocalIframeInfo.open('"+value+"');";
+                            value="javascript:LocalBrowserInfo.open('"+value+"');";
                         }
                         if (name=="src") {
-                            value=iwin.LocalIframeInfo.convertURL(value);
+                            value=iwin.LocalBrowserInfo.convertURL(value);
                         }
-                        if (n.tagName=="script") {
+                        if (n.tagName.toLowerCase()=="script") {
                             d=new $.Deferred;
                             nn.onload = nn.onreadystatechange = function() {
                                 d.resolve(i+1);
@@ -117,6 +123,8 @@ define(["Shell", "FS","DeferredUtil","UI"],function (sh,FS,DU,UI) {
         var ifrm=new LocalBrowser(place);
         ifrm.open(f,{onload:function () {
             d.resolve();            
+        },onerror:function (e) {
+            d.reject(e);
         }});
         return d.promise();
     };

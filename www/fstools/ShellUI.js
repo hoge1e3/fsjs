@@ -87,6 +87,9 @@ function (shParent,UI,FS,Util,shp) {
                         out.append(sres);
                     }
                     t.prompt();
+                }).fail(function (e) {
+                    t.err(e);
+                    t.prompt();
                 });
             } catch(e) {
                 t.err(e);

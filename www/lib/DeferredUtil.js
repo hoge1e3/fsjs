@@ -1,5 +1,6 @@
 define([], function () {
     var DU;
+    var DUBRK=function(r){this.res=r;};
     DU={
             ensureDefer: function (v) {
                 var d=new $.Deferred;
@@ -83,14 +84,14 @@ define([], function () {
             },
             loop: function (f,r) {
                 while(true) {
-                    if (r && r.DU_BRK) return r.res;
+                    if (r instanceof DUBRK) return r.res;
                     var deff1=true, deff2=false;
                     // ★ not deffered  ☆  deferred
                     var r1=f(r);
                     var dr=$.when(r1).then(function (r2) {
                         r=r2;
                         deff1=false;
-                        if (r && r.DU_BRK) return r.res;
+                        if (r instanceof DUBRK) return r.res;
                         if (deff2) return DU.loop(f,r); //☆
                     });
                     deff2=true;
@@ -99,8 +100,17 @@ define([], function () {
                 }
             },
             brk: function (res) {
-                return {DU_BRK:true,res:res};
+                return new DUBRK(res);
+            },
+            tryLoop: function (f,r) {
+                return DU.loop(DU.tr(f),r);
+            },
+            tryEach: function (s,f) {
+                return DU.loop(s,DU.tr(f));
             }
     };
+    DU.begin=DU.tr=DU.throwF;
+    DU.callbackToPromise=DU.funcPromise;
+    
     return DU;
 });

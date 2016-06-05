@@ -1,6 +1,7 @@
 define(["Shell","DeferredUtil"],function (sh,DU) {
     var envMulti=/\$\{([^\}]*)\}/;
     var envSingle=/^\$\{([^\}]*)\}$/;
+    var F=DU.throwF;
     sh.enterCommand=function (s) {
         if (!this._history) this._history=[];
         this._history.push(s);
@@ -42,7 +43,7 @@ define(["Shell","DeferredUtil"],function (sh,DU) {
     sh.gotoLoop=function () {
         var t=this;
         var cnt=0;
-        return DU.loop(function () {
+        return DU.loop(F(function () {
             if (cnt++>100) {
                 delete t._pc;
                 throw new Error("Are infinite loops scary?");
@@ -54,7 +55,7 @@ define(["Shell","DeferredUtil"],function (sh,DU) {
             var s=t._history[t._pc++];
             var args=t.parseCommand(s);
             return t.evalCommand(args);
-        });
+        }));
     };
     sh.sleep=function (t) {
         var d=new $.Deferred;
@@ -66,9 +67,9 @@ define(["Shell","DeferredUtil"],function (sh,DU) {
         f=this.resolve(f,true);
         var t=this;
         var ln=f.lines();
-        return DU.each(ln,function (l) {
+        return DU.each(ln,F(function (l) {
             return t.enterCommand(l);
-        });
+        }));
     };
     /*
     set a 1
@@ -169,9 +170,9 @@ define(["Shell","DeferredUtil"],function (sh,DU) {
                 var e=expr.shift();
                 a.push( this.evalCommand(e) );
             }
-            return $.when.apply($,a).then(function () {
+            return $.when.apply($,a).then(F(function () {
                 return f.apply(t,arguments);
-            });
+            }));
         } else {
             return expr;
         }   
