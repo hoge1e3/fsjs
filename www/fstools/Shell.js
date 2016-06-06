@@ -1,6 +1,7 @@
-define(["FS","Util","PathUtil","assert"],
-        function (FS,Util,PathUtil,assert) {
+define(["FS","assert"],
+        function (FS,assert) {
     var Shell={};
+    var PathUtil=assert(FS.PathUtil);
     Shell.cd=function (dir) {
         Shell.cwd=resolve(dir,true);
         return Shell.pwd();

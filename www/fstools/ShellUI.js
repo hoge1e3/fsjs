@@ -146,7 +146,7 @@ function (shParent,UI,FS,Util,shp) {
             f.text( u.$vars.prog.val() );
         }
     };
-    sh.window=function () {
+    sh.window=shParent.window=function () {
         res.show(sh.cwd);
     };
     sh.atest=function (a,b,options) {
@@ -163,78 +163,6 @@ function (shParent,UI,FS,Util,shp) {
             return oldcat.apply(sh,arguments);
         }
     };
-    sh.usopen=function (){
-        this.echo(UI("iframe").attr("src","http://jsrun.it/hoge1e4/qgNZ"));
-    };
-    sh.open=function (f) {
-        f=this.resolve(f,true);
-        var x=$($.parseXML(f.text()));
-        var i=UI("iframe");
-        //i.attr("src","blank.html");
-        var base=f.up();
-        var iwin;
-        var idoc;
-        var d=new $.Deferred;
-        window.ifrm=i[0];
-        i.on("load",function () {
-            iwin=i[0].contentWindow;
-            idoc=iwin.document;
-            appendTo($(x).find("head")[0], idoc.head);
-            appendTo($(x).find("body")[0], idoc.body);
-            d.resolve(i[0]);
-        });
-        this.echo(i);
-        function injectScript(src) {
-            var nn=idoc.createElement("script");
-            nn.appendChild(idoc.createTextNode(src));
-            idoc.head.appendChild(nn);
-        }
-        function appendTo(src,dst) {
-            var c=src.childNodes;
-            console.log("appendto",c,c.length);
-            for (var i=0;i<c.length ; i++) {
-                var n=c[i];
-                if (n.tagName) {
-                    var nn=idoc.createElement(n.tagName);
-                    var at=n.attributes;
-                    // should charset must be set first than src
-                    var names=[];
-                    for (var j=0;j<at.length;j++) {
-                        names.push(at[j].name);
-                    }
-                    var idx=names.indexOf("charset");
-                    if (idx>=0) { 
-                        names.splice(idx,1); 
-                        names.unshift("charset"); 
-                    }
-                    console.log("names", names);
-                    names.forEach(function (name) {
-                        var value=n.getAttribute(name);
-                        if (name=="src" && FS.PathUtil.isRelativePath(value)) {
-                            var sfile=base.rel(value);
-                            value=file2blobURL(sfile);
-                            console.log("blob",sfile, value);
-                        } 
-                        nn.setAttribute(name, value);
-                    });
-                    appendTo(n ,nn);
-                    dst.appendChild(nn);
-                } else {
-                    dst.appendChild(idoc.createTextNode(n.textContent));
-                }
-            }
-        }
-        function file2blobURL(sfile) {
-            var blob;
-            if (sfile.isText()) {
-                blob = new iwin.Blob([sfile.text()], {type: sfile.contentType()});
-            } else {
-                blob = new iwin.Blob([sfile.bytes()], {type: sfile.contentType()});
-            }
-            var url = iwin.URL.createObjectURL(blob);
-            return url;
-        }
-        return d.promise();
-    };
+
     return res;
 });
