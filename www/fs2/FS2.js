@@ -238,19 +238,56 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
         isLink: function (path) {
             return null;
         },
-        getDirTree: function (path, dest) {
-            dest=dest||{};
+        opendirEx: function (path, options) {
             assert.is(path, P.AbsDir);
             var ls=this.opendir(path);
             var t=this;
+            var dest={};
             ls.forEach(function (f) {
                 var p=P.rel(path,f);
-                if (t.isDir(p)) {
-                    t.getDirTree(p,dest);
-                } else {
-                    dest[p]=t.getMetaInfo(p);
-                }
+                dest[f]=t.getMetaInfo(p);
             });
+            return dest;
+        },
+        getDirTree: function (path, options) {
+            options=options||{};
+            var dest=options.dest=options.dest||{};
+            options.style=options.style||"flat-absolute";
+            if (options.style=="flat-relative" && !options.base) {
+                options.base=path;
+            }
+            assert.is(path, P.AbsDir);
+            var tr=this.opendirEx(path);
+            if (options.style=="no-recursive") return tr;
+            var t=this;
+            for (var f in tr) {
+                var meta=tr[f];
+                var p=P.rel(path,f);
+                if (t.isDir(p)) {
+                    switch(options.style) {
+                    case "flat-absolute":
+                    case "flat-relative":
+                        t.getDirTree(p,options);
+                        break;
+                    case "hierarchical":
+                        options.dest={};
+                        dest[f]=t.getDirTree(p,options);
+                        break;
+                    }
+                } else {
+                    switch(options.style) {
+                    case "flat-absolute":
+                        dest[p]=meta;
+                        break;
+                    case "flat-relative":
+                        dest[P.relPath(p,options.base)]=meta;
+                        break;
+                    case "hierarchical":
+                        dest[f]=meta;
+                        break;
+                    }
+                }
+            }
             return dest;
         }
         /*get: function (path) {

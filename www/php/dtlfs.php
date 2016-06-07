@@ -12,13 +12,6 @@ if (isset($_POST["script"])) {
     $scr=$_POST["script"];
     $j=new Services_JSON;
     $vmc=$j->decode($scr);
-    /*
-    $fs=new NativeFS("./tmp/");
-    $ap=new Permission(null);
-    //$p=new Permission(new SFile($fs,"../tmp/",$ap));
-    $rootDir=new SFile($fs,"/",$ap);
-    $root=Dtl::init();
-    $root->rootDir=$rootDir;*/
     DtlFS::init();
     header("Content-type: text/json; charset=utf8");
     echo $j->encode( DtlUtil::unwrap( DtlFS::run($vmc) ) ); 

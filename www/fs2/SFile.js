@@ -139,8 +139,8 @@ SFile.prototype={
     setMetaInfo: function (info, options) {
         return this.act.fs.setMetaInfo(this.act.path,info, options);
     },
-    getDirTree: function () {
-        return this.act.fs.getDirTree(this.act.path);
+    getDirTree: function (options) {
+        return this.act.fs.getDirTree(this.act.path, options);
     },
     lastUpdate:function () {
         A(this.exists());

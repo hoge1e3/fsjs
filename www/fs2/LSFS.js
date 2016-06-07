@@ -314,11 +314,17 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
         getURL: function (path) {
             return this.getContent(path).toURL();
         },
-        getDirTree: function (path,dest) {
+        opendirEx: function (path,options) {
             assert.is(path,P.AbsDir);
-            dest=dest||{};
+            //dest=dest||{};
+            var res={};
             var d=this.getDirInfo(path);
-            for (var f in d) {
+            for (var k in d) {
+                if (d[k].trashed) continue;
+                res[k]=d[k];
+            }
+            return res;
+            /*for (var f in d) {
                 var p=P.rel(path,f);
                 if (this.isDir(p)) {// TODO symlink not follow(and no entry in dest)
                     this.getDirTree(p,dest);
@@ -326,7 +332,7 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
                     dest[p]=d[f];
                 }
             }
-            return dest;
+            return dest;*/
         }
     });
     return LSFS;
