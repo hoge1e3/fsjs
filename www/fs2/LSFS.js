@@ -4,6 +4,7 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
         assert(storage," new LSFS fail: no storage");
     	this.storage=storage;
     	this.options=options||{};
+    	this.dirCache={};
     };
     var isDir = P.isDir.bind(P);
     var up = P.up.bind(P);
@@ -72,7 +73,8 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
         if (path == null) throw new Error("getDir: Null path");
         if (!endsWith(path, SEP)) path += SEP;
         assert(this.inMyFS(path));
-        var dinfo = {};
+        if (this.dirCache[path]) return this.dirCache[path];         
+        var dinfo =  {};
         try {
             var dinfos = this.getItem(path);
             if (dinfos) {
@@ -81,12 +83,13 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
         } catch (e) {
             console.log("dinfo err : " , path , dinfos);
         }
-        return dinfo;
+        return this.dirCache[path]=dinfo;
     };
     LSFS.prototype.putDirInfo=function putDirInfo(path, dinfo, trashed) {
   	    assert.is(arguments,[P.AbsDir, Object]);
   	    if (!isDir(path)) throw new Error("Not a directory : " + path);
   	    assert(this.inMyFS(path));
+  	    this.dirCache[path] = dinfo;
   	    this.setItem(path, JSON.stringify(dinfo));
         var ppath = up(path);
         if (ppath == null) return;
@@ -295,6 +298,7 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
             this.assertWriteable(path);
             if (!this.itemExists(path)) {
                 if (P.isDir(path)) {
+                    this.dirCache[path]={};
                     this.setItem(path,"{}");
                 } else {
                     this.setItem(path,"");
