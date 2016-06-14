@@ -142,8 +142,11 @@ SFile.prototype={
     getDirTree: function (options) {
         return this.act.fs.getDirTree(this.act.path, options);
     },
+    assertExists: function () {
+        A(this.exists(),this.path()+" does not exist.");
+    },
     lastUpdate:function () {
-        A(this.exists());
+        this.assertExists();
         return this.metaInfo().lastUpdate;
     },
     exists: function (options) {
