@@ -56,6 +56,8 @@ class DtlArray {
     public function size() {
         return count($this->raw);
     }
-    
+    public function __toString() {
+        return "[DtlArray]";
+    }
 }
 ?>

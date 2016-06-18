@@ -62,7 +62,7 @@ class DtlThread {
             // ret
             case "ret":
                 return $stack->pop();
-            // [val] store1 nameid 
+            // [val] store1 nameid layer
             case "store1":
                 $name=$c[1];
                 $layer=$c[2];

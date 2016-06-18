@@ -40,11 +40,15 @@ define([], function () {
             },
             funcPromise:function (f) {
                 var d=new $.Deferred;
-                f(function (v) {
-                    d.resolve(v);
-                },function (e) {
+                try {
+                    f(function (v) {
+                        d.resolve(v);
+                    },function (e) {
+                        d.reject(e);
+                    });
+                } catch(e) {
                     d.reject(e);
-                });
+                }
                 return d.promise();
             },
             throwPromise:function (e) {

@@ -1,5 +1,5 @@
-define(["Shell","UI","FS","Util","ShellParser"], 
-function (shParent,UI,FS,Util,shp) {
+define(["Shell","UI","FS","Util","ShellParser","DeferredUtil"], 
+function (shParent,UI,FS,Util,shp,DU) {
     var res={};
     var sh=shParent.clone();
     res.show=function (dir) {
@@ -162,6 +162,12 @@ function (shParent,UI,FS,Util,shp) {
         } else {
             return oldcat.apply(sh,arguments);
         }
+    };
+    sh.requirejs=function () {
+        var a=Array.prototype.slice.call(arguments);
+        return DU.callbackToPromise(function (succ,err) {
+            return requirejs(a,succ);
+        });
     };
 
     return res;
