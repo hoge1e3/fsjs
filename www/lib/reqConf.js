@@ -10,6 +10,7 @@ var reqConf={
             "ShellParser":"../fstools/ShellParser",
             "wget":"../fstools/wget",
             "DeferredUtil":"../lib/DeferredUtil",
+            "source-map":"../lib/source-map",
             "foo":"bar"
         },
         "baseUrl": "fs2"

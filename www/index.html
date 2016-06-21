@@ -8,6 +8,9 @@
 <script>
 requirejs.config(reqConf);
 requirejs(["ShellUI","wget","LocalBrowser"], function(shui,wget,lcb){
+    onerror=function (a,b,c,d,e) {
+        if (e) shui.sh.err(e.stack);
+    };
     shui.show();
 });
 

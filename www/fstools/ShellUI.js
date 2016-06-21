@@ -15,6 +15,7 @@ function (shParent,UI,FS,Util,shp,DU) {
         var d=res.d;
         return d;
     };
+    res.sh=sh;
     sh.cls=function () {
         res.d.$vars.inner.empty();
     };
