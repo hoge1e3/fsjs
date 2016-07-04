@@ -75,10 +75,21 @@ function (sh,FS,DU,UI,S) {
                             if (sourcemap && rr) {
                                 var r=parseInt(rr[1]);
                                 var c=parseInt(rr[2]);
-                                var op=sourcemap.originalPositionFor({
-                                    line: r, column:c
+                                var op;
+                                op=sourcemap.originalPositionFor({
+                                    line: r, column:c,
+                                    bias:S.SourceMapConsumer.GREATEST_LOWER_BOUND
                                 });
-                                //console.log("Original", r,c,op);
+                                if (op.source==null) {
+                                    op=sourcemap.originalPositionFor({
+                                        line: r, column:c,
+                                        bias:S.SourceMapConsumer.LEAST_UPPER_BOUND
+                                    });
+                                }
+                                if (window.parent) {
+                                    window.parent.lastSourceMap=sourcemap;
+                                }
+                                console.log("Original", line, r,c,op);
                                 line=line.substring(0,idx)+
                                 op.source+":"+op.line+":"+op.column+")";
                             } else {
