@@ -1,8 +1,8 @@
 <?php 
-require_once"./fs/NativeFS.php";
-require_once"./fs/PathUtil.php";
-require_once"./fs/Permission.php";
-require_once"./fs/SFile.php";
+require_once"./NativeFS.php";
+require_once"./PathUtil.php";
+require_once"./Permission.php";
+require_once"./SFile.php";
 require_once"./dtl/Dtl.php";
 require_once"./dtlfs/DtlSys.php";
 class DtlFS {
