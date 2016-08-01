@@ -7,7 +7,10 @@ class DtlThread {
         $stack=new DtlArray;
         $scope=$block->__scope->create();//DtlObj::create($block->scope);
         $scope->self=$self;
-        $scope->arguments=$args;
+        //$scope->arguments=$args;
+        for ($i=0;$i<count($args);$i++) {
+            DtlObj::s_set($scope,"_param$i",$args[$i]);
+        }
         //echo count($block->code);
         foreach ($block->code as $c) {
             //$len=count($this->stack);
@@ -19,9 +22,19 @@ class DtlThread {
                 break;
             //push1 nameid (local)  -> push1 nameid(self::name)
             case "pushbinding":
+                $name=$c[1];
+                $layer=count($c)>=3? $c[2] :0;
+                $sscope=$scope;
+                while ($layer-->0) $sscope=$sscope->__proto__;
+                $stack->push(DtlObj::s_get($sscope,$name));
+                break;
             case "push1":
                 $name=$c[1];
-                $stack->push(DtlObj::s_get($scope,$name));
+                if ($name=="self") {
+                    $stack->push($self);
+                } else {
+                    $stack->push(DtlObj::s_get($self,$name));
+                }
                 break;
             //[obj] push2 nameid
             case "push2":
@@ -66,13 +79,18 @@ class DtlThread {
                 return $stack->pop();
             // [val] store1 nameid layer
             case "storebinding":
-            case "store1":
                 $name=$c[1];
                 $layer=$c[2];
                 $val=$stack->pop();
                 $sscope=$scope;
                 while ($layer-->0) $sscope=$sscope->__proto__;
                 DtlObj::s_set($sscope,$name,$val);
+                $stack->push($val);
+                break;
+            case "store1":
+                $name=$c[1];
+                $val=$stack->pop();
+                DtlObj::s_set($self,$name,$val);
                 $stack->push($val);
                 break;
             //[obj] [val] store2 nameid (obj.nameid=val)
@@ -84,14 +102,14 @@ class DtlThread {
                 $stack->push($val);
                 break;
             // Deprecated?
-            case "para":
+            /*case "para":
                 $name=$c[1];
                 DtlObj::s_set($scope, $name, array_shift($scope->arguments));
                 break;                
             case "tmp":
                 $name=$c[1];
                 DtlObj::s_set($scope, $name, 0);
-                break;
+                break;*/
             case "pop":
                 $n=$c[1];
                 while($n--) $stack->pop();
