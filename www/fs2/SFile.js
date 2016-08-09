@@ -350,10 +350,10 @@ SFile.prototype={
             return f.name();
         });
     },
-    convertOptions:function(options) {
+    convertOptions:function(o) {
+        var options=Util.extend({},o);
         var dir=this.assertDir();
         var pathR=this.path();
-        if (!options) options={};
         if (!options.excludes) options.excludes={};
         if (options.excludes instanceof Array) {
             var excludes={};

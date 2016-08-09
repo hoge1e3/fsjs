@@ -320,23 +320,18 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
         },
         opendirEx: function (path,options) {
             assert.is(path,P.AbsDir);
-            //dest=dest||{};
+            options=options||{};
             var res={};
             var d=this.getDirInfo(path);
+            if (options.includeTrashed) {
+                //console.log("INCLTR",d);
+                return d;
+            }
             for (var k in d) {
                 if (d[k].trashed) continue;
                 res[k]=d[k];
             }
             return res;
-            /*for (var f in d) {
-                var p=P.rel(path,f);
-                if (this.isDir(p)) {// TODO symlink not follow(and no entry in dest)
-                    this.getDirTree(p,dest);
-                } else {
-                    dest[p]=d[f];
-                }
-            }
-            return dest;*/
         }
     });
     return LSFS;

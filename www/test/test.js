@@ -150,6 +150,8 @@ try{
             chkRecur(testd,{excludes:["sub/"]}, "test.txt");
             testd.rel("test.txt").rm();
             chkRecur(testd,{},"sub/test2.txt");
+            console.log("FULLL",testd.path());
+            console.log("FULLL",localStorage[testd.path()]);
             chkRecur(testd,{includeTrashed:true}, "test.txt,sub/test2.txt");
             testd.rel("test.txt").rm({noTrash:true});
             chkRecur(testd,{}, "sub/test2.txt");
@@ -237,7 +239,11 @@ try{
         dir.recursive(function (f) {
             di.push(f.relPath(dir));
         },options);
+        
         assert.eq(di.join(","), result);
+        options.style="flat-relative";
+        var t=dir.getDirTree(options);
+        assert.eq( Object.keys(t).join(","), result);
     }
     function testContent() {
        var s="てすとabc";

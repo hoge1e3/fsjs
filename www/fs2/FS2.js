@@ -253,16 +253,32 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
             options=options||{};
             var dest=options.dest=options.dest||{};
             options.style=options.style||"flat-absolute";
-            if (options.style=="flat-relative" && !options.base) {
+            options.excludes=options.excludes||[];
+            assert.is(options.excludes,Array);
+            if (!options.base) {
                 options.base=path;
             }
             assert.is(path, P.AbsDir);
-            var tr=this.opendirEx(path);
+            var tr=this.opendirEx(path,options);
             if (options.style=="no-recursive") return tr;
             var t=this;
             for (var f in tr) {
                 var meta=tr[f];
                 var p=P.rel(path,f);
+                var relP=P.relPath(p,options.base);
+                switch(options.style) {
+                    case "flat-relative":
+                    case "hierarchical":
+                        if (options.excludes.indexOf(relP)>=0) {
+                            continue;
+                        }
+                        break;
+                    case "flat-absolute":
+                        if (options.excludes.indexOf(p)>=0) {
+                            continue;
+                        }
+                        break;
+                }
                 if (t.isDir(p)) {
                     switch(options.style) {
                     case "flat-absolute":
@@ -280,7 +296,7 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
                         dest[p]=meta;
                         break;
                     case "flat-relative":
-                        dest[P.relPath(p,options.base)]=meta;
+                        dest[relP]=meta;
                         break;
                     case "hierarchical":
                         dest[f]=meta;
