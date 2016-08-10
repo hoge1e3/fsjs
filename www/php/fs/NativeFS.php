@@ -1,27 +1,27 @@
 <?php
+require_once __DIR__."/PathUtil.php";
+
 class NativeFS {
    var $top;
    function NativeFS($top) {
        $this->top=$top;
    }
    public function resolve($path) {
-       if (is_null($path)) throw new Exception("path is null!");
-       if (PathUtil::startsWith($path, PathUtil::SEP)) {
+        if (is_null($path)) throw new Exception("path is null!");
+        if (PathUtil::startsWith($path, PathUtil::SEP)) {
            $path=substr($path,1);
-       }
-       $r=PathUtil::rel($this->top, $path);
-       if (PathUtil::startsWith($r,$top)) { 
-           //echo "$path resolved to [$r]";  
-           return $r; 
-       }
-       throw new Exception("Canno access to $path");
+        }
+        $r=PathUtil::rel($this->top, $path);
+        if (PathUtil::startsWith($r,$top)) { 
+            return $r; 
+        }
+        throw new Exception("Canno access to $path");
    }
    public function getContent($path) {
        if (!$this->exists($path)) $this->notFound($path);
        $filename = $this->resolve($path);
        $sz=filesize($filename);
        if ($sz==0) return "";
-       //echo "fn $filename $path";
  	   $handle = fopen($filename, "r");
 	   $contents = fread($handle, $sz);
 	   fclose($handle);
@@ -54,7 +54,8 @@ class NativeFS {
         return is_dir($this->resolve($path));
    }
    function getMetaInfo($path) {
-        return array( lastUpdate=>filemtime($this->resolve($path))*1000 );
+        //if (preg_match("/Ireizu/",$path)) return array(lastUpdate=>FALSE);
+        return array( "lastUpdate"=>filemtime($this->resolve($path))*1000 );
    }
    function setMetaInfo($path, $info) {
         if (isset($info["lastUpdate"])) {
