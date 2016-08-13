@@ -3,6 +3,7 @@ class PathUtil {
   const SEP="/";
   public static function rel($path, $relPath) {
     // echo "rel $path $relPath<BR>";
+    if ($relPath=="") return $path;
     $paths=PathUtil::splitPath($relPath);
     $resPath=$path;
     $resPath=self::truncSep($resPath);
