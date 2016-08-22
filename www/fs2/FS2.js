@@ -165,7 +165,7 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
             if (this.isReadOnly(path)) this.err(path, "read only.");
         },
         getContentType: function (path, options) {
-            var e=P.ext(path);
+            var e=(P.ext(path)+"").toLowerCase();
             return M[e] || (options||{}).def || "text/plain";
         },
         getBlob: function (path, options) {

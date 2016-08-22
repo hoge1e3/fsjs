@@ -146,6 +146,8 @@ define(["FS2","assert","PathUtil","extend","MIMETypes","Content"],
                 return fs.unlinkSync(np);
             }
         },
+        // mv: is Difficult, should check dst.fs==src.fs 
+        //     and both have not subFileSystems
         exists: function (path, options) {
             var np=this.toNativePath(path);
             return fs.existsSync(np);

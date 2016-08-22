@@ -276,7 +276,7 @@ SFile.prototype={
             }
             return res;
         } else {
-            A(srcIsDir && dstIsDir);
+            A(srcIsDir && dstIsDir,"Both src and dst should be dir");
             src.each(function (s) {
                 dst.rel(s.name()).copyFrom(s, options);
             });
