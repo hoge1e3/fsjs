@@ -1,5 +1,5 @@
 define(["FS2","NativeFS","LSFS", "PathUtil","Env","assert","SFile","RootFS","Content"],
-        function (FS,NativeFS,LSFS, P,Env,A,SFile,RootFS,Content) {
+        function (FSClass,NativeFS,LSFS, P,Env,A,SFile,RootFS,Content) {
     var FS={};
     if (typeof window=="object") window.FS=FS;
     var rootFS;
@@ -64,6 +64,7 @@ define(["FS2","NativeFS","LSFS", "PathUtil","Env","assert","SFile","RootFS","Con
     FS.SFile=SFile;
     FS.PathUtil=P;
     FS.Content=Content;
+    FS.Class=FSClass;
     FS.isFile=function (f) {
         return SFile.is(f);
     };
