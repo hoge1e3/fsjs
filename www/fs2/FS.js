@@ -5,6 +5,9 @@ define(["FS2","NativeFS","LSFS", "PathUtil","Env","assert","SFile","RootFS","Con
     var rootFS;
     var envVar={};
     var env=new Env(envVar);
+    FS.addFSType=FSClass.addFSType;
+    FS.availFSTypes=FSClass.availFSTypes;
+
     FS.setEnv=function (key, value) {
         if (typeof key=="object") {
             for (var k in key) {
