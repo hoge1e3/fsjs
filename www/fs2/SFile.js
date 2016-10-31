@@ -202,6 +202,14 @@ SFile.prototype={
             this.act.fs.setContent(this.act.path, Content.url(t));
         }
     },
+    appendText:function (t) {
+        A.is(t,String);
+        if (this.isText()) {
+            this.act.fs.appendContent(this.act.path, Content.plainText(t));
+        } else {
+            throw new Error("append only for text file");
+        }
+    },
     getContent: function (f) {
         if (typeof f=="function") {
             return this.act.fs.getContentAsync(this.act.path).then(f);

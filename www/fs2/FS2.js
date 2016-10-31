@@ -75,6 +75,18 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
                 return $.when(t.setContent(path,content,options));
             });
         },
+        appendContent: function (path, content, options) {
+            //var nc=this.getContent(path,options).toPlainText()+content.toPlainText();
+            //return this.setContent(path, Content.fromPlainText(nc) , options);
+            stub("");
+        },
+        appendContentAsync: function (path, content, options) {
+            var t=this;
+            if (!t.supportsSync()) stub("appendContentAsync");
+            return $.when(content).then(function (content) {
+                return $.when(t.appendContent(path,content,options));
+            });
+        },
         getMetaInfo: function (path, options) {
             stub("");
         },

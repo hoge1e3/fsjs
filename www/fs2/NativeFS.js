@@ -86,6 +86,18 @@ define(["FS2","assert","PathUtil","extend","MIMETypes","Content"],
                 fs.writeFileSync(np, content.toPlainText());
             }
         },
+        appendContent: function (path,content) {
+            A.is(arguments,[P.Absolute,Content]);
+            var pa=P.up(path);
+            if (pa) this.getRootFS().resolveFS(pa).mkdir(pa);
+            var np=this.toNativePath(path);
+            if (content.hasBin() || !content.hasPlainText() ) {
+                fs.appendFileSync(np, content.toNodeBuffer() );
+            } else {
+                // !hasBin && hasText
+                fs.appendFileSync(np, content.toPlainText());
+            }
+        },
         getMetaInfo: function(path, options) {
             this.assertExist(path, options);
             var s=this.stat(path);
@@ -125,13 +137,17 @@ define(["FS2","assert","PathUtil","extend","MIMETypes","Content"],
         },
         opendir: function (path, options) {
             assert.is(arguments,[String]);
+            options=options||{};
             var np=this.toNativePath(path);
             var ts=P.truncSEP(np);
-            var r=fs.readdirSync(np).map(function (e) {
-                var s=fs.statSync(ts+SEP+e);
-                var ss=s.isDirectory()?SEP:"";
-                return e+ss;
-            });
+            var r=fs.readdirSync(np);
+            if (!options.nosep) {
+                r=r.map(function (e) {
+                    var s=fs.statSync(ts+SEP+e);
+                    var ss=s.isDirectory()?SEP:"";
+                    return e+ss;
+                });
+            }
             var res=[]; //this.dirFromFstab(path);
             return assert.is(res.concat(r),Array);
         },

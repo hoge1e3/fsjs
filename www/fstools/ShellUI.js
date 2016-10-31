@@ -167,6 +167,7 @@ function (shParent,UI,FS,Util,shp,DU) {
     sh.requirejs=function () {
         var a=Array.prototype.slice.call(arguments);
         return DU.callbackToPromise(function (succ,err) {
+            //console.log("reqjs",a);
             return requirejs(a,succ);
         });
     };

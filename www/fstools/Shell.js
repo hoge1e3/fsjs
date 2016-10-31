@@ -168,7 +168,7 @@ define(["FS","assert"],
         return r;
     };
     Shell.getvar=function (k) {
-        return this.vars[k];
+        return this.vars[k] || (process && process.env[k]);
     };
     Shell.get=Shell.getvar;
     Shell.set=function (k,v) {
