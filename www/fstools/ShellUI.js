@@ -165,10 +165,27 @@ function (shParent,UI,FS,Util,shp,DU) {
         }
     };
     sh.requirejs=function () {
+        var t=this;
         var a=Array.prototype.slice.call(arguments);
+        var options={};
+        if (a.length>0 && typeof a[a.length-1]=="object") {
+            options=a.pop();
+            if (options.f) {
+                a=a.map(function(e) {
+                    return t.resolve(e).getURL()+
+                    (options.r? "?"+Math.floor(Math.random()*1000):""); 
+                });
+                //console.log(a);
+                //return;
+            }
+        }
         return DU.callbackToPromise(function (succ,err) {
             //console.log("reqjs",a);
-            return requirejs(a,succ);
+            try {
+                return requirejs(a,succ);
+            }catch(e){
+                err(e);
+            }
         });
     };
 

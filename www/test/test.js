@@ -130,6 +130,13 @@ try{
             chkCpy(nfs.rel("Tonyu/Projects/MapTest/images/park.png"));
             chkCpy(testd.rel("test.png"));
             testd.rel("test.png").removeWithoutTrash();
+            //---- test append
+            var beforeAppend=nfs.rel("Tonyu/Projects/MapTest/Test.tonyu");
+            var appended=nfs.rel("Tonyu/Projects/MapTest/TestApp.tonyu");
+            beforeAppend.copyTo(appended);
+            var apText="\n//tuikasitayo-n\n";
+            appended.appendText(apText);
+            assert.eq(beforeAppend.text()+apText,appended.text());
         }
         console.log(testd.rel("test.txt").path(),testd.rel("test.txt").text());
         testd.rel("test.txt").text(romd.rel("Actor.tonyu").text()+ABCD+CDEF);

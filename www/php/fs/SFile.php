@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__."/../json.php";
 class SFile{
     private $_path, $fs;
     public function SFile($fs, $path) {
@@ -46,11 +47,14 @@ class SFile{
     public function rel($r) {
         return $this->resolve(PathUtil::rel($this->path(),$r));
     }
-    public function sibling() {
+    public function sibling($r) {
+        return $this->up()->rel($r);
     }
-    public function startsWith() {
+    public function startsWith($prefix) {
+        return PathUtil::startsWith($this->name(),$prefix);
     }
-    public function endsWith() {
+    public function endsWith($postfix) {
+        return PathUtil::endsWith($this->name(),$postfix);
     }
     public function equals() {
     }
@@ -116,6 +120,18 @@ class SFile{
     public function getURL() {
     }
     public function lines() {
+        if (func_num_args()==0) {
+            return file($this->nativePath());
+        } else {
+            $a=func_get_arg(0);
+            if (!is_array($a)) {
+                throw new Exception("1st arg should be array");
+            }
+            $this->setText(implode("\n",$a));
+        }
+    }
+    public function nativePath() {
+        return $this->fs->resolve($this->path());
     }
     public function getObj() {
         $j=new Services_JSON;
@@ -129,7 +145,7 @@ class SFile{
         if (func_num_args()==0) {
             return $this->getObj();
         } else {
-            return $this->setObj(func_get_args(0));
+            return $this->setObj(func_get_arg(0));
         }
     }
     public function copyFrom() {
@@ -175,7 +191,13 @@ class SFile{
     public function isLink() {
     }
     public function getResolvedLinkPath() {
-    }    
+    }   
+    public function openAppend() {
+        return fopen($this->nativePath(),"a");
+    }
+    public function openWrite() {
+        return fopen($this->nativePath(),"w");
+    }
     
 }
 
