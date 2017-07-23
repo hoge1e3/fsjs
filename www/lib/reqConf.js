@@ -2,6 +2,7 @@ var reqConf={
         "shim": {
         },
         "paths": {
+            "jquery.binarytransport":"../lib/jquery.binarytransport",
             "UI":"../lib/UI",
             "Shell":"../fstools/Shell",
             "ShellUI":"../fstools/ShellUI",

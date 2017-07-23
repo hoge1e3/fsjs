@@ -1,5 +1,5 @@
-define(["FS2","NativeFS","LSFS", "PathUtil","Env","assert","SFile","RootFS","Content"],
-        function (FSClass,NativeFS,LSFS, P,Env,A,SFile,RootFS,Content) {
+define(["FS2","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","RootFS","Content"],
+        function (FSClass,NativeFS,LSFS,WebFS, P,Env,A,SFile,RootFS,Content) {
     var FS={};
     if (typeof window=="object") window.FS=FS;
     var rootFS;

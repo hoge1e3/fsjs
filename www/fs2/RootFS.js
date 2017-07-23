@@ -52,15 +52,42 @@ define(["assert","FS2","PathUtil","SFile"], function (assert,FS,P,SFile) {
                 assert.is(path,P.Absolute);
                 return new SFile(this.resolveFS(path), path);
             },   
-            addObserver: function (f) {
+            addObserver: function () {
                 this.observers=this.observers||[];
-                this.observers.push(f);
+                var path,f;
+                if (arguments.length==2) {
+                    path=arguments[0];
+                    f=arguments[1];
+                } else if (arguments.length==1) {
+                    path="";
+                    f=arguments[0];
+                } else {
+                    throw new Error("Invalid argument spec");
+                }
+                assert.is(path,String);
+                assert.is(f,Function);
+                var observers=this.observers;
+                var observer={
+                    path:path,
+                    handler:f,
+                    remove: function () {
+                        var i=observers.indexOf(this);
+                        observers.splice(i,1);
+                    }
+                };
+                this.observers.push(observer);
+                return observer;
             },
             notifyChanged: function (path,metaInfo) {
                 if (!this.observers) return;
-                this.observers.forEach(function (f) {
-                    f(path,metaInfo);
+                this.observers.forEach(function (ob) {
+                    if (P.startsWith(path,ob.path)) {
+                        ob.handler(path,metaInfo);
+                    }
                 });
+            },
+            getRootFS:function () {
+                return this;
             }
     };
     for (var i in p) {

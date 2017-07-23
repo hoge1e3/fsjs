@@ -196,6 +196,9 @@ SFile.prototype={
     },
     setText:function (t) {
         A.is(t,String);
+        if (this.isDir()) {
+            throw new Error("Cannot write to directory: "+this.path());
+        }
         if (this.isText()) {
             this.act.fs.setContent(this.act.path, Content.plainText(t));
         } else {
@@ -217,6 +220,9 @@ SFile.prototype={
         return this.act.fs.getContent(this.act.path);
     },
     setContent: function (c) {
+        if (this.isDir()) {
+            throw new Error("Cannot write to directory: "+this.path());
+        }
         return this.act.fs.setContentAsync(this.act.path,c);
     },
 
@@ -391,6 +397,12 @@ SFile.prototype={
     },
     getResolvedLinkPath: function () {
         return this.act.path;
+    },
+    getFS:function () {
+        return this.act.fs;
+    },
+    observe: function (h) {
+        return this.getFS().getRootFS().addObserver(this.path(),h);
     }
 };
 Object.defineProperty(SFile.prototype,"act",{
