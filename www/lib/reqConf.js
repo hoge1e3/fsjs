@@ -2,7 +2,6 @@ var reqConf={
         "shim": {
         },
         "paths": {
-            "jquery.binarytransport":"../lib/jquery.binarytransport",
             "UI":"../lib/UI",
             "Shell":"../fstools/Shell",
             "ShellUI":"../fstools/ShellUI",
@@ -10,7 +9,6 @@ var reqConf={
             "LocalBrowser":"../fstools/LocalBrowser",
             "ShellParser":"../fstools/ShellParser",
             "wget":"../fstools/wget",
-            "DeferredUtil":"../lib/DeferredUtil",
             "source-map":"../lib/source-map",
             "foo":"bar"
         },

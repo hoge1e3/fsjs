@@ -1,9 +1,9 @@
-requirejs(["LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS","Content"],
-function (LSFS, romk,assert,P,SFile, NativeFS,RootFS,Content) {
+requirejs(["WebFS","LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS","Content"],
+function (WebFS,LSFS, romk,assert,P,SFile, NativeFS,RootFS,Content) {
 try{
     
     assert.is(arguments,
-       [Function,LSFS,Function,Object,Function,Function,Function]);
+       [Function,Function,LSFS,Function,Object,Function,Function,Function]);
     var rootFS=window.rfs=new RootFS(new LSFS(localStorage));
     window.onerror=function (e) {
         alert(e);
@@ -142,6 +142,20 @@ try{
         testd.rel("test.txt").text(romd.rel("Actor.tonyu").text()+ABCD+CDEF);
         chkCpy(testd.rel("test.txt"));
         testd.rel("test.txt").text(ABCD);
+        
+        if (!nfs) {
+            rootFS.mount(
+                location.protocol+"//"+location.host+"/", 
+                "web");
+            rootFS.get(location.href).getContent(function (c) {
+                try {
+                    console.log(location.href, c.toPlainText());
+                    assert(c.toPlainText().indexOf("989174192312")>=0);
+                }catch(e) {
+                    alert(e);
+                }
+            });
+        }
 
         setTimeout(function () {location.reload();},10000);
     } else {

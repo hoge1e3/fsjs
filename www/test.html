@@ -6,19 +6,8 @@
 <script>
 requirejs.config(reqConf);
 requirejs(["../test/test"], function(){});
-/*requirejs(["LSFS","RootFS","../test/ROM_k","assert","DataURL"],
-function (LSFS, RootFS,romk,assert,DataURL) {
-    assert.is(arguments,[Function,Function,LSFS,Function,Function]);
-    var rootFS=window.rfs=new LSFS(localStorage);// new RootFS;
-    //var fs=window.lfs=new LSFS(localStorage);
-    window.romk=romk;
-    //rootFS.mount("/",fs);
-    rootFS.mount("/rom/",romk);
-    console.log(rootFS.opendir("/var/"));
-    console.log(rootFS.opendir("/rom/"));
-    window.DataURL=DataURL;
-})*/;
 </script>
+<!--989174192312-->
 </head>
 <body>
 <img id="img"/>
