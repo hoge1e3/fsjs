@@ -2,7 +2,7 @@
 require_once __DIR__."/../json.php";
 class SFile{
     private $_path, $fs;
-    public function SFile($fs, $path) {
+    public function __construct($fs, $path) {
         $this->_path=$path;
         $this->fs=$fs;
         //$this->perm=$perm;
@@ -36,6 +36,7 @@ class SFile{
         return PathUtil::name($this->path());
     }
     public function truncExt() {
+        return PathUtil::truncExt($this->name());
     }
     public function ext() {
     }
@@ -47,6 +48,15 @@ class SFile{
     public function rel($r) {
         return $this->resolve(PathUtil::rel($this->path(),$r));
     }
+    /*public function rel2($r) {
+    // why distract?    a="/fuga"    a->rel2("hoge")  ->   /hoge/fuga ?  or /hoge   ?
+        if ($this->isDir()) return $this->rel($r);
+        $res=$this->sibling($r);
+        if ($res->isDir()) {
+            $res=$res->rel($this->name());
+        }
+        return $res;
+    }*/
     public function sibling($r) {
         return $this->up()->rel($r);
     }
@@ -81,14 +91,18 @@ class SFile{
         return $this->fs->exists($this->path());
     }
     public function rm() {
+        return $this->fs->rm($this->path());
     }
     public function removeWithoutTrash() {
     }
     public function isDir() {
+        return is_dir($this->nativePath());
     }
     public function getContent() {
+        return $this->fs->getContent($this->path());
     }
-    public function setContent() {
+    public function setContent($s) {
+        return $this->fs->setContent($this->path(), $s);
     }
     public function setText($s) {
         //$this->check("write");
@@ -148,13 +162,23 @@ class SFile{
             return $this->setObj(func_get_arg(0));
         }
     }
-    public function copyFrom() {
+    public function appendFrom($f) {
+        return $f->appendTo($this);
     }
-    public function copyTo() {
+    public function appendTo($t) {
+        return $this->fs->appendContent($t->path(), $this->getContent());
     }
-    public function moveFrom() {
+    public function copyFrom($f) {
+        return $f->copyTo($this);
     }
-    public function moveTo() {
+    public function copyTo($t) {
+        return $t->setContent($this->getContent());
+    }
+    public function moveFrom($f) {
+        return $f->moveTo($this);
+    }
+    public function moveTo($t) {
+        $this->fs->mv($this->path(), $t->path());
     }
     public function assertDir() {
     }
@@ -167,6 +191,16 @@ class SFile{
     public function eachrev() {
     }
     public function recursive() {
+        $res=array();
+        $files=$this->listFiles();
+        foreach ($files as $file) {
+            if ($file->isDir()) {
+                $res=array_merge($res,$file->recursive());    
+            } else {
+                array_push($res,$file);
+            }
+        }
+        return $res;
     }
     public function listFiles() {
         $l=$this->ls();
@@ -183,6 +217,7 @@ class SFile{
     public function convertOptions() {
     }
     public function mkdir() {
+        $this->fs->mkdir($this->path());
     }
     public function link() {
     }
@@ -192,6 +227,12 @@ class SFile{
     }
     public function getResolvedLinkPath() {
     }   
+    public function append($t) {
+        return $this->fs->appendContent($this->path(), $t);
+    }
+    public function appendContent($c) {
+        return $this->fs->appendContent($this->path(), $c);
+    }
     public function openAppend() {
         return fopen($this->nativePath(),"a");
     }

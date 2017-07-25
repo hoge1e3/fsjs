@@ -4,7 +4,7 @@ require_once __DIR__."/Permission.php";
 
 class NativeFS {
    private $top,$permission;
-   function NativeFS($top=null,$permission=null) {
+   function __construct($top=null,$permission=null) {
        $this->top=$top;
        //if (isset($permission)) 
        $this->permission=$permission;
@@ -67,6 +67,14 @@ class NativeFS {
        $filename = $this->resolve($path);
        $this->mkdir(PathUtil::up($path));
        $handle = fopen($filename, "w");
+       $contents = fwrite($handle, $cont);
+       fclose($handle);
+   }
+   function appendContent($path, $cont) {
+       $this->check($path,Permission::WRITE);
+       $filename = $this->resolve($path);
+       $this->mkdir(PathUtil::up($path));
+       $handle = fopen($filename, "a");
        $contents = fwrite($handle, $cont);
        fclose($handle);
    }

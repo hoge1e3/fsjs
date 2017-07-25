@@ -1,6 +1,9 @@
 <?php
 class PathUtil {
   const SEP="/";
+  public static function resolveDotDot($path) {
+      return self::rel("",$path);
+  }
   public static function rel($path, $relPath) {
     // echo "rel $path $relPath<BR>";
     if ($relPath=="") return $path;
@@ -34,6 +37,11 @@ class PathUtil {
           return substr($path, 0, strlen($path)-1);
       }
       return $path;
+  }
+  public static function truncExt($path) {
+        $r=self::name($path);
+        $r = preg_replace("/\.[a-zA-Z0-9]+$/","",$r);
+        return $r;
   }
   public static function splitPath($path) {
         $res=explode(self::SEP,$path);
