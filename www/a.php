@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__."/php/ErrorHandler.php";
+
 $qs=$_SERVER["QUERY_STRING"];
 $action=preg_replace("/&.*/","",$qs);
 if (isset($_POST["action"])) $action=$_POST["action"];

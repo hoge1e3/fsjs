@@ -21,7 +21,7 @@ edit /kn/index.html
         options=options||{};
         var filesS=JSON.stringify([remote.path()]);
         console.log(filesS);
-        $.post("a.php?kinako",{
+        return $.post("a.php?kinako",{
             cmd:"download",
             files:filesS
         }).then(function (data) {
@@ -54,9 +54,9 @@ edit /kn/index.html
                     });
                 }catch(e){console.log(e.stack);}
             });
-        }).fail(function (e) {
+        })/*.fail(function (e) {
             console.log(e);
-        });
+        })*/;
     };
     
 });

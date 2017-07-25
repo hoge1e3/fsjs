@@ -30,6 +30,9 @@ if (isset($_POST["cmd"]) && $_POST["cmd"]=="download") {
 }
 
 function recur($dir,$res) {
+	if (!$dir->isDir()) {
+		throw new Exception($dir->path()." is not dir!");
+	}
     foreach ($dir->listFiles() as $file) {
         if ($file->isDir()) {
             recur($file,$res);
