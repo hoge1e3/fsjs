@@ -1,10 +1,11 @@
-define(["FS2","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","RootFS","Content"],
-        function (FSClass,NativeFS,LSFS,WebFS, P,Env,A,SFile,RootFS,Content) {
+define(["FS2","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","RootFS","Content","zip","DeferredUtil"],
+        function (FSClass,NativeFS,LSFS,WebFS, P,Env,A,SFile,RootFS,Content,zip,DU) {
     var FS={};
     if (typeof window=="object") window.FS=FS;
     var rootFS;
     var envVar={};
     var env=new Env(envVar);
+    DU.external.Promise=zip.external.Promise;
     FS.addFSType=FSClass.addFSType;
     FS.availFSTypes=FSClass.availFSTypes;
 
@@ -68,6 +69,7 @@ define(["FS2","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","Roo
     FS.PathUtil=P;
     FS.Content=Content;
     FS.Class=FSClass;
+    FS.zip=zip;
     FS.isFile=function (f) {
         return SFile.is(f);
     };

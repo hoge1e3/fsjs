@@ -1,5 +1,5 @@
-define(["extend","assert","PathUtil","Util","Content","FS2"],
-function (extend,A,P,Util,Content,FS2) {
+define(["extend","assert","PathUtil","Util","Content","FS2","FileSaver.min"],
+function (extend,A,P,Util,Content,FS2,sv) {
 
 var SFile=function (rootFS, path) {
     A.is(path, P.Absolute);
@@ -403,6 +403,12 @@ SFile.prototype={
     },
     observe: function (h) {
         return this.getFS().getRootFS().addObserver(this.path(),h);
+    },
+    getBlob: function () {
+        return new Blob([this.bytes()],{type:this.contentType()});
+    },
+    download: function () {
+        saveAs(this.getBlob(),this.name());;
     }
 };
 Object.defineProperty(SFile.prototype,"act",{

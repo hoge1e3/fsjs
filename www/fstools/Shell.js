@@ -35,7 +35,7 @@ define(["FS","assert"],
     function resolve(v, mustExist) {
         var r=resolve2(v);
         if (!FS.SFile.is(r)) {console.log(r," is not file");}
-        if (mustExist && !r.exists()) throw r+": no such file or directory";
+        if (mustExist && !r.exists()) throw new Error(r+": no such file or directory");
         return r;
     }
     function resolve2(v) {

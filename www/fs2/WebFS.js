@@ -15,7 +15,7 @@ define(["FS2","jquery.binarytransport","DeferredUtil","Content","PathUtil"],
         exists: function () {return true;},
         getContentAsync: function (path){
             var t=this;
-            return DU.funcPromise(function (succ,err) {
+            return DU.promise(function (succ,err) {
                 $.get(path,function (blob) {
                     var reader = new FileReader();
                     reader.addEventListener("loadend", function() {
