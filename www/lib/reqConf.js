@@ -9,6 +9,7 @@ var reqConf={
             "LocalBrowser":"../fstools/LocalBrowser",
             "ShellParser":"../fstools/ShellParser",
             "wget":"../fstools/wget",
+            "DragDrop":"../fstools/DragDrop",
             "source-map":"../lib/source-map",
             "foo":"bar"
         },

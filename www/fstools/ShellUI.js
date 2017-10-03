@@ -1,5 +1,5 @@
-define(["Shell","UI","FS","Util","ShellParser","DeferredUtil"], 
-function (shParent,UI,FS,Util,shp,DU) {
+define(["Shell","UI","FS","Util","DragDrop","ShellParser","DeferredUtil"], 
+function (shParent,UI,FS,Util,DragDrop,shp,DU) {
     var res={};
     var sh=shParent.clone();
     res.show=function (dir) {
@@ -82,7 +82,10 @@ function (shParent,UI,FS,Util,shp,DU) {
                             });
                             table.appendTo(out);
                         } else {
-                            out.append(JSON.stringify(sres));
+                            try {
+                                jso=JSON.stringify(sres);
+                            } catch(e) {jso="[Object]"};
+                            out.append(jso);
                         }
                     } else {
                         out.append(sres);
@@ -163,6 +166,22 @@ function (shParent,UI,FS,Util,shp,DU) {
         } else {
             return oldcat.apply(sh,arguments);
         }
+    };
+    sh.dragdrop=function () {
+        var cwd=this.cwd;
+        var ui=UI("div",{
+            style:"padding: 10px;"
+        },"Drag here to add files to ",cwd.path());
+        DragDrop.accept(ui,cwd,{
+            onComplete: function (status) {
+                for (var i in status) {
+                   ui.append(UI("div",i," ",status[i].status, 
+                   status[i].redirectedTo? "Redirected to "+
+                   status[i].redirectedTo.name() : "") );
+                }
+            } 
+        });
+        this.echo(ui);
     };
     sh.requirejs=function () {
         var t=this;

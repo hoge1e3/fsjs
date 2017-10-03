@@ -184,6 +184,25 @@ define(["FS","assert"],
         f=this.resolve(f);
         return f.exists();
     };
+    Shell.dl=function (f) {
+        return f.download();  
+    };
+    Shell.zip=function () {
+        var t=this;
+        var a=Array.prototype.slice.call(arguments).map(function (e) {
+            if (typeof e==="string") return t.resolve(e);    
+            return e;
+        });
+        return FS.zip.zip.apply(FS.zip,a);
+    };
+    Shell.unzip=function () {
+        var t=this;
+        var a=Array.prototype.slice.call(arguments).map(function (e) {
+            if (typeof e==="string") return t.resolve(e);    
+            return e;
+        });
+        return FS.zip.unzip.apply(FS.zip,a);
+    };
 
     Shell.prompt=function () {};
     Shell.ASYNC={r:"SH_ASYNC"};

@@ -5,7 +5,7 @@ define(["FS2","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","Roo
     var rootFS;
     var envVar={};
     var env=new Env(envVar);
-    DU.external.Promise=zip.external.Promise;
+    DU.external.Promise=zip.JSZip.external.Promise;
     FS.addFSType=FSClass.addFSType;
     FS.availFSTypes=FSClass.availFSTypes;
 
@@ -70,6 +70,7 @@ define(["FS2","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","Roo
     FS.Content=Content;
     FS.Class=FSClass;
     FS.zip=zip;
+    FS.DeferredUtil=DU;
     FS.isFile=function (f) {
         return SFile.is(f);
     };
