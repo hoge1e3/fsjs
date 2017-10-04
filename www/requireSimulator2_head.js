@@ -30,6 +30,7 @@ define([],function () {
 	define=function (name,reqs,func) {
 		R.def(name, reqs,func);
 	};
+	define.amd={};
 	requirejs=function (reqs,func) {
 		R.def(REQJS+(reqjsSeq++),reqs,func);
 	};

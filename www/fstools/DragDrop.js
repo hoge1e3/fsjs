@@ -1,4 +1,6 @@
-define(["DeferredUtil","SFile"],function (DU,SFile) {
+define(["FS"],function (FS) {
+    var DU=FS.DeferredUtil;
+    var SFile=FS.SFile;
     DragDrop={};
     DragDrop.readFile=function (file) {
         return DU.promise(function (succ) {
@@ -80,14 +82,16 @@ define(["DeferredUtil","SFile"],function (DU,SFile) {
             e.stopPropagation();
             e.preventDefault();
         }
+        var entc=0;
         function enter(e) {
             var eo=e.originalEvent;
             console.log("enter",eo.target.innerHTML,e);
+            entc++;
             /*if (dom[0]===eo.relatedTarget) {
                 dom.addClass("dragging");
             }*/
             //if (eo.target===dom[0]) {
-                $(eo.target).addClass("dragging");
+            dom.addClass("dragging");
             //}
                 //$(eo.target).addClass("dragging");
             //e.stopPropagation();
@@ -97,11 +101,12 @@ define(["DeferredUtil","SFile"],function (DU,SFile) {
             var eo=e.originalEvent;
             //dom.removeClass("dragging");
             console.log("leave",eo.target.innerHTML,e);
+            entc--;
             /*if (dom[0]===eo.relatedTarget) {
                 dom.removeClass("dragging");
             }*/
             //if (eo.target===dom[0]) {
-                $(eo.target).removeClass("dragging");
+            if (entc<=0) dom.removeClass("dragging");
             //}
             //$(eo.target).removeClass("dragging");
             //e.stopPropagation();

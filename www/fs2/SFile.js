@@ -1,5 +1,5 @@
-define(["extend","assert","PathUtil","Util","Content","FS2","FileSaver.min"],
-function (extend,A,P,Util,Content,FS2,sv) {
+define(["extend","assert","PathUtil","Util","Content","FS2","FileSaver.min","DeferredUtil"],
+function (extend,A,P,Util,Content,FS2,sv,DU) {
 
 var SFile=function (rootFS, path) {
     A.is(path, P.Absolute);
@@ -100,7 +100,7 @@ SFile.prototype={
         return this._resolve(P.rel(pathR, relPath));
     },
     sibling: function (n) {
-        return this.up().rel(n);  
+        return this.up().rel(n);
     },
     startsWith: function (pre) {
         return P.startsWith(this.name(),pre);
@@ -150,7 +150,13 @@ SFile.prototype={
         return this.metaInfo().lastUpdate;
     },
     exists: function (options) {
-        options=options||{};
+        if (typeof options==="function") {
+            var f=options;
+            options=arguments[1]||{};
+            return DU.resolve(this.exists(options)).then(f);
+        } else {
+            options=options||{};
+        }
         var p=this.fs.exists(this.path(),options);
         if (p || options.noFollowLink) {
             return p;
@@ -162,19 +168,25 @@ SFile.prototype={
         //   ln /test/c /a/b/
         //   rm a/b/c/
         //   rm a/b/c/d
+        var t=this;
         options=options||{};
         if (this.isLink()) {
-            return this.fs.rm(this.path(),options);
+            return DU.resolve(this.fs.rm(this.path(),options));
         }
         /*if (!this.exists({noFollowLink:true})) {
             return this.act.fs.rm(this.act.path, options);
         }*/
+        var a;
         if (this.isDir() && (options.recursive||options.r)) {
-            this.each(function (f) {
-                f.rm(options);
+            a=this.each(function (f) {
+                return f.rm(options);
             });
+        } else {
+            a=DU.resolve();
         }
-        return this.act.fs.rm(this.act.path, options);
+        return a.then(function () {
+            return t.act.fs.rm(t.act.path, options);
+        });
         //var pathT=this.path();
         //this.fs.rm(pathT, options);
     },
@@ -187,9 +199,12 @@ SFile.prototype={
         return this.act.fs.isDir(this.act.path);
     },
     // File
-    text:function () {
+    text:function (f) {
+    	if (typeof f==="function") {
+			return this.getText(f);
+		}
         if (arguments.length>0) {
-            this.setText(arguments[0]);
+            return this.setText(arguments[0]);
         } else {
             return this.getText();
         }
@@ -226,7 +241,17 @@ SFile.prototype={
         return this.act.fs.setContentAsync(this.act.path,c);
     },
 
-    getText:function () {
+    getText:function (f) {
+    	if (typeof f==="function") {
+    		var t=this;
+    	    return this.getContent(function (c) {
+    	    	if (t.isText()) {
+	    	    	return c.toPlainText();
+	    	    } else {
+	    	    	return c.toURL();
+	    	    }
+    	    }).then(f);
+    	}
         if (this.isText()) {
             return this.act.fs.getContent(this.act.path).toPlainText();
         } else {
@@ -288,10 +313,10 @@ SFile.prototype={
             if (options.a) {
                 dst.setMetaInfo(src.getMetaInfo());
             }
-            return res;
+            return DU.resolve(res);
         } else {
             A(srcIsDir && dstIsDir,"Both src and dst should be dir");
-            src.each(function (s) {
+            return src.each(function (s) {
                 dst.rel(s.name()).copyFrom(s, options);
             });
         }
@@ -299,9 +324,9 @@ SFile.prototype={
         //if (options.a) file.metaInfo(src.metaInfo());
     },
     moveFrom: function (src, options) {
-        var res=this.copyFrom(src,options);
-        src.rm({recursive:true});
-        return res;
+        return this.copyFrom(src,options).then(function () {
+            return src.rm({recursive:true});
+        });
     },
     moveTo: function (dst, options) {
         return dst.moveFrom(this,options);
@@ -321,7 +346,9 @@ SFile.prototype={
     },*/
     each:function (f,options) {
         var dir=this.assertDir();
-        dir.listFiles(options).forEach(f);
+        return dir.listFiles(function (ls) {
+            return DU.each(ls,f);// ls.forEach(f)
+        },options);
     },
     eachrev:function (f,options) {
         var dir=this.assertDir();
@@ -335,6 +362,11 @@ SFile.prototype={
         },options);
     },
     listFiles:function (options) {
+        if (typeof options==="function") {
+            var f=options;
+            options=arguments[1]||{};
+            return DU.resolve(this.listFiles(options)).then(f);
+        }
         A(options==null || typeof options=="object");
         var dir=this.assertDir();
         var path=this.path();
@@ -419,7 +451,7 @@ Object.defineProperty(SFile.prototype,"act",{
         this._act.fs=this.rootFS.resolveFS(this._act.path);
         A.is(this._act, {fs:FS2, path:P.Absolute});
         return this._act;
-    } 
+    }
 });
 
 return SFile;
