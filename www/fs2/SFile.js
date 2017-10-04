@@ -150,13 +150,12 @@ SFile.prototype={
         return this.metaInfo().lastUpdate;
     },
     exists: function (options) {
-        if (typeof options==="function") {
-            var f=options;
-            options=arguments[1]||{};
-            return DU.resolve(this.exists(options)).then(f);
-        } else {
-            options=options||{};
+        var args=Array.prototype.slice.call(arguments);
+        if (typeof args[0]==="function") {
+            var f=args.shift();
+            return DU.resolve(this.exists.apply(this,args)).then(f);
         }
+        options=options||{};
         var p=this.fs.exists(this.path(),options);
         if (p || options.noFollowLink) {
             return p;
@@ -215,15 +214,17 @@ SFile.prototype={
             throw new Error("Cannot write to directory: "+this.path());
         }
         if (this.isText()) {
-            this.act.fs.setContent(this.act.path, Content.plainText(t));
+            // if use fs.setContentAsync, the error should be handled by .fail
+            // setText will throw error immediately
+            return DU.resolve(this.act.fs.setContent(this.act.path, Content.plainText(t)));
         } else {
-            this.act.fs.setContent(this.act.path, Content.url(t));
+            return DU.resolve(this.act.fs.setContent(this.act.path, Content.url(t)));
         }
     },
     appendText:function (t) {
         A.is(t,String);
         if (this.isText()) {
-            this.act.fs.appendContent(this.act.path, Content.plainText(t));
+            return this.act.fs.appendContent(this.act.path, Content.plainText(t));
         } else {
             throw new Error("append only for text file");
         }
@@ -352,20 +353,22 @@ SFile.prototype={
     },
     eachrev:function (f,options) {
         var dir=this.assertDir();
-        dir.listFiles(options).reverse().forEach(f);
+        return dir.listFiles(options,function (ls) {
+            return DU.each(ls.reverse(),f);// ls.forEach(f)
+        });
     },
     recursive:function (fun,options) {
         var dir=this.assertDir();
-        dir.each(function (f) {
-            if (f.isDir()) f.recursive(fun);
-            else fun(f);
+        return dir.each(function (f) {
+            if (f.isDir()) return f.recursive(fun);
+            else return fun(f);
         },options);
     },
     listFiles:function (options) {
-        if (typeof options==="function") {
-            var f=options;
-            options=arguments[1]||{};
-            return DU.resolve(this.listFiles(options)).then(f);
+        var args=Array.prototype.slice.call(arguments);
+        if (typeof args[0]==="function") {
+            var f=args.shift();
+            return DU.resolve(this.listFiles.apply(this,args)).then(f);
         }
         A(options==null || typeof options=="object");
         var dir=this.assertDir();

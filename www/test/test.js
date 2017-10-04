@@ -1,7 +1,7 @@
-requirejs(["WebFS","LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS","Content"],
-function (WebFS,LSFS, romk,assert,P,SFile, NativeFS,RootFS,Content) {
+requirejs(["WebFS","LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS","Content","DeferredUtil"],
+function (WebFS,LSFS, romk,assert,P,SFile, NativeFS,RootFS,Content,DU) {
 try{
-    
+
     assert.is(arguments,
        [Function,Function,LSFS,Function,Object,Function,Function,Function]);
     var rootFS=window.rfs=new RootFS(new LSFS(localStorage));
@@ -124,7 +124,7 @@ try{
             assert(P.startsWith(pngurl, "data:"));
             document.getElementById("img").src=pngurl;
             nfs.rel("sub/test.png").text(pngurl);
-            
+
             nfs.rel("sub/test.png").copyTo(testd.rel("test.png"));
             chkCpy(nfs.rel("Tonyu/Projects/MapTest/Test.tonyu"));
             chkCpy(nfs.rel("Tonyu/Projects/MapTest/images/park.png"));
@@ -142,10 +142,10 @@ try{
         testd.rel("test.txt").text(romd.rel("Actor.tonyu").text()+ABCD+CDEF);
         chkCpy(testd.rel("test.txt"));
         testd.rel("test.txt").text(ABCD);
-        
+
         if (!nfs) {
             rootFS.mount(
-                location.protocol+"//"+location.host+"/", 
+                location.protocol+"//"+location.host+"/",
                 "web");
             rootFS.get(location.href).getContent(function (c) {
                 try {
@@ -187,6 +187,11 @@ try{
             assert(!testf.exists({includeTrashed:false}));
             assert(!testf.exists({includeTrashed:true}));
             assert(!testd.rel("test.txt").exists({includeTrashed:true}));
+            ramd.rel("a/b.txt").text("c").then(function () {
+                return ramd.rel("c.txt").text("d");
+            }).then(function () {
+                return chkRecurAsync(ramd,{},"a/b.txt,c.txt");
+            });
 
             if (nfs) {
                 assert.eq(nfs.rel("sub/test2.txt").text(), romd.rel("Actor.tonyu").text());
@@ -216,12 +221,12 @@ try{
        var t=f.text();
        tmp.text(t);
        checkSame(f,tmp);
-       
+
        // bin->bin
        var b=f.getBytes();
        tmp.setBytes(b);
        checkSame(f,tmp);
-       
+
         if (f.isText()) {
             // plain->bin(lsfs) , bin->plain(natfs)
            b=f.getBytes();
@@ -231,8 +236,8 @@ try{
            checkSame(f,tmp);
         }
 
-       
-	   tmp.removeWithoutTrash();         
+
+	   tmp.removeWithoutTrash();
     }
     function checkSame(a,b) {
        console.log("check same",a,b,a.text().length);
@@ -255,12 +260,28 @@ try{
             throw new Error("ROM!");
         }
     }
+    function chkRecurAsync(dir,options,result) {
+        var di=[];
+        DU.timeout(100).then(function () {
+            return dir.recursive(function (f) {
+                di.push(f.relPath(dir));
+                console.log("CHKRA",f.name());
+                return DU.timeout(500);
+            },options);
+        }).then(function () {
+            assert.eq(di.join(","), "start,"+result);
+            console.log("checkRecurasync",di);
+        }).fail(function (e) {
+            console.error(e);
+            alert(e);
+        });
+        di.push("start");
+    }
     function chkRecur(dir,options,result) {
         var di=[];
         dir.recursive(function (f) {
             di.push(f.relPath(dir));
         },options);
-        
         assert.eq(di.join(","), result);
         options.style="flat-relative";
         var t=dir.getDirTree(options);
@@ -271,7 +292,7 @@ try{
        var C=Content;
        var c1=C.plainText(s);
        test(c1,[s]);
-    
+
        function test(c,path) {
            var p=c.toPlainText();
            var u=c.toURL();

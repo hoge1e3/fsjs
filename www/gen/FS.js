@@ -2105,8 +2105,8 @@ a).createObjectURL(c);p?p.location.href=f:void 0==a.open(f,"_blank")&&"undefined
 c.size,"application/octet-stream"),l=!0);q&&"download"!==e&&(e+=".download");if("application/octet-stream"===b||q)p=a;u?(r+=c.size,u(a.TEMPORARY,r,h(function(a){a.root.getDirectory("saved",m,h(function(a){var b=function(){a.getFile(e,m,h(function(a){a.createWriter(h(function(b){b.onwriteend=function(b){p.location.href=a.toURL();d.readyState=d.DONE;t(d,"writeend",b);s(a)};b.onerror=function(){var a=b.error;a.code!==a.ABORT_ERR&&g()};["writestart","progress","write","abort"].forEach(function(a){b["on"+
 a]=d["on"+a]});b.write(c);d.abort=function(){b.abort();d.readyState=d.DONE};d.readyState=d.WRITING}),g)}),g)};a.getFile(e,{create:!1},h(function(a){a.remove();b()}),h(function(a){a.code===a.NOT_FOUND_ERR?b():g()}))}),g)}),g)):g()}},b=m.prototype;b.abort=function(){this.readyState=this.DONE;t(this,"abort")};b.readyState=b.INIT=0;b.WRITING=1;b.DONE=2;b.error=b.onwritestart=b.onprogress=b.onwrite=b.onabort=b.onerror=b.onwriteend=null;return function(a,b){return new m(a,b)}}}("undefined"!==typeof self&&
 self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof module&&null!==module?module.exports=saveAs:"undefined"!==typeof define&&null!==define&&null!=define.amd&&define('FileSaver.min',[],function(){return saveAs});
-define('SFile',["extend","assert","PathUtil","Util","Content","FS2","FileSaver.min"],
-function (extend,A,P,Util,Content,FS2,sv) {
+define('SFile',["extend","assert","PathUtil","Util","Content","FS2","FileSaver.min","DeferredUtil"],
+function (extend,A,P,Util,Content,FS2,sv,DU) {
 
 var SFile=function (rootFS, path) {
     A.is(path, P.Absolute);
@@ -2207,7 +2207,7 @@ SFile.prototype={
         return this._resolve(P.rel(pathR, relPath));
     },
     sibling: function (n) {
-        return this.up().rel(n);  
+        return this.up().rel(n);
     },
     startsWith: function (pre) {
         return P.startsWith(this.name(),pre);
@@ -2257,6 +2257,11 @@ SFile.prototype={
         return this.metaInfo().lastUpdate;
     },
     exists: function (options) {
+        var args=Array.prototype.slice.call(arguments);
+        if (typeof args[0]==="function") {
+            var f=args.shift();
+            return DU.resolve(this.exists.apply(this,args)).then(f);
+        }
         options=options||{};
         var p=this.fs.exists(this.path(),options);
         if (p || options.noFollowLink) {
@@ -2269,19 +2274,25 @@ SFile.prototype={
         //   ln /test/c /a/b/
         //   rm a/b/c/
         //   rm a/b/c/d
+        var t=this;
         options=options||{};
         if (this.isLink()) {
-            return this.fs.rm(this.path(),options);
+            return DU.resolve(this.fs.rm(this.path(),options));
         }
         /*if (!this.exists({noFollowLink:true})) {
             return this.act.fs.rm(this.act.path, options);
         }*/
+        var a;
         if (this.isDir() && (options.recursive||options.r)) {
-            this.each(function (f) {
-                f.rm(options);
+            a=this.each(function (f) {
+                return f.rm(options);
             });
+        } else {
+            a=DU.resolve();
         }
-        return this.act.fs.rm(this.act.path, options);
+        return a.then(function () {
+            return t.act.fs.rm(t.act.path, options);
+        });
         //var pathT=this.path();
         //this.fs.rm(pathT, options);
     },
@@ -2310,15 +2321,17 @@ SFile.prototype={
             throw new Error("Cannot write to directory: "+this.path());
         }
         if (this.isText()) {
-            this.act.fs.setContent(this.act.path, Content.plainText(t));
+            // if use fs.setContentAsync, the error should be handled by .fail
+            // setText will throw error immediately
+            return DU.resolve(this.act.fs.setContent(this.act.path, Content.plainText(t)));
         } else {
-            this.act.fs.setContent(this.act.path, Content.url(t));
+            return DU.resolve(this.act.fs.setContent(this.act.path, Content.url(t)));
         }
     },
     appendText:function (t) {
         A.is(t,String);
         if (this.isText()) {
-            this.act.fs.appendContent(this.act.path, Content.plainText(t));
+            return this.act.fs.appendContent(this.act.path, Content.plainText(t));
         } else {
             throw new Error("append only for text file");
         }
@@ -2408,10 +2421,10 @@ SFile.prototype={
             if (options.a) {
                 dst.setMetaInfo(src.getMetaInfo());
             }
-            return res;
+            return DU.resolve(res);
         } else {
             A(srcIsDir && dstIsDir,"Both src and dst should be dir");
-            src.each(function (s) {
+            return src.each(function (s) {
                 dst.rel(s.name()).copyFrom(s, options);
             });
         }
@@ -2419,9 +2432,9 @@ SFile.prototype={
         //if (options.a) file.metaInfo(src.metaInfo());
     },
     moveFrom: function (src, options) {
-        var res=this.copyFrom(src,options);
-        src.rm({recursive:true});
-        return res;
+        return this.copyFrom(src,options).then(function () {
+            return src.rm({recursive:true});
+        });
     },
     moveTo: function (dst, options) {
         return dst.moveFrom(this,options);
@@ -2441,20 +2454,29 @@ SFile.prototype={
     },*/
     each:function (f,options) {
         var dir=this.assertDir();
-        dir.listFiles(options).forEach(f);
+        return dir.listFiles(function (ls) {
+            return DU.each(ls,f);// ls.forEach(f)
+        },options);
     },
     eachrev:function (f,options) {
         var dir=this.assertDir();
-        dir.listFiles(options).reverse().forEach(f);
+        return dir.listFiles(options,function (ls) {
+            return DU.each(ls.reverse(),f);// ls.forEach(f)
+        });
     },
     recursive:function (fun,options) {
         var dir=this.assertDir();
-        dir.each(function (f) {
-            if (f.isDir()) f.recursive(fun);
-            else fun(f);
+        return dir.each(function (f) {
+            if (f.isDir()) return f.recursive(fun);
+            else return fun(f);
         },options);
     },
     listFiles:function (options) {
+        var args=Array.prototype.slice.call(arguments);
+        if (typeof args[0]==="function") {
+            var f=args.shift();
+            return DU.resolve(this.listFiles.apply(this,args)).then(f);
+        }
         A(options==null || typeof options=="object");
         var dir=this.assertDir();
         var path=this.path();
@@ -2539,7 +2561,7 @@ Object.defineProperty(SFile.prototype,"act",{
         this._act.fs=this.rootFS.resolveFS(this._act.path);
         A.is(this._act, {fs:FS2, path:P.Absolute});
         return this._act;
-    } 
+    }
 });
 
 return SFile;
