@@ -13,7 +13,7 @@ define(["FS"],function (FS) {
             reader.readAsArrayBuffer(file);
         });
     };
-    DragDrop.accept=function (dom, dst,options) {
+    DragDrop.accept=function (dom, fdst,options) {
         options=options||{};
         dom.on("dragover",over);
         dom.on("dragenter",enter);
@@ -35,6 +35,8 @@ define(["FS"],function (FS) {
             };
         }
         function dropAdd(e) {
+            var dst=fdst;
+            if (typeof dst==="function") dst=dst();
             dom.removeClass("dragging");
             var status={};
             var eo=e.originalEvent;
@@ -53,7 +55,7 @@ define(["FS"],function (FS) {
                             file:itemFile,
                             status:"cancelled"
                         };
-                        return;                
+                        return;
                     }
                     if (SFile.is(cr)) actFile=cr;
                     else actFile=itemFile;
