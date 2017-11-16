@@ -1,6 +1,18 @@
 define(["FS2","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","RootFS","Content","zip","DeferredUtil"],
         function (FSClass,NativeFS,LSFS,WebFS, P,Env,A,SFile,RootFS,Content,zip,DU) {
     var FS={};
+    FS.assert=A;
+    FS.Content=Content;
+    FS.Class=FSClass;
+    FS.DeferredUtil=DU;
+    FS.Env=Env;
+    FS.FSClass=FSClass;
+    FS.NativeFS=NativeFS;
+    FS.PathUtil=P;
+    FS.RootFS=RootFS;
+    FS.SFile=SFile;
+    FS.WebFS=WebFS;
+    FS.zip=zip;
     if (typeof window=="object") window.FS=FS;
     var rootFS;
     var envVar={};
@@ -65,12 +77,6 @@ define(["FS2","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","Roo
         FS.init();
         return rootFS.unmount.apply(rootFS,arguments);
     };
-    FS.SFile=SFile;
-    FS.PathUtil=P;
-    FS.Content=Content;
-    FS.Class=FSClass;
-    FS.zip=zip;
-    FS.DeferredUtil=DU;
     FS.isFile=function (f) {
         return SFile.is(f);
     };
