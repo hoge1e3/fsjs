@@ -119,42 +119,6 @@ define([],function () {
             }
         };
     });
-    /*assert.is=function () {
-        try {
-            return top.is.apply(top,arguments);
-        } catch(e) {
-            console.log(e.stack);
-            throw new Error(e.message);
-        }
-    };
-    assert.isset=function () {
-        try {
-            return top.isset.apply(top,arguments);
-        } catch(e) {
-            throw new Error(e.message);
-        }
-    };
-    assert.ne=function () {
-        try {
-            return top.ne.apply(top,arguments);
-        } catch(e) {
-            throw new Error(e.message);
-        }
-    };
-    assert.eq=function () {
-        try {
-            return top.eq.apply(top,arguments);
-        } catch(e) {
-            throw new Error(e.message);
-        }
-    };
-    assert.ensureError=function () {
-        try {
-            return top.ensureError.apply(top,arguments);
-        } catch(e) {
-            throw new Error(e.message);
-        }
-    };*/
     assert.fail=top.fail.bind(top);
     assert.f=function (f) {
         return {

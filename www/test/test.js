@@ -156,6 +156,13 @@ try{
                 }
             });
         }
+        DU.each([1,2,3],function(i) {
+            //return DU.timeout(1000).then(function ()  {
+                console.log("DU.EACH",i);
+                if (i==2) i.c.d;
+                return i;
+            //});
+        }).fail(function (e) {console.log("DU.ERR",e);});
 
         setTimeout(function () {location.reload();},10000);
     } else {
@@ -192,7 +199,6 @@ try{
             }).then(function () {
                 return chkRecurAsync(ramd,{},"a/b.txt,c.txt");
             });
-
             if (nfs) {
                 assert.eq(nfs.rel("sub/test2.txt").text(), romd.rel("Actor.tonyu").text());
                 assert.eq(nfs.rel("test.txt").text(),ABCD);
