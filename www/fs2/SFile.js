@@ -364,11 +364,31 @@ SFile.prototype={
             else return fun(f);
         },options);
     },
+    listFilesAsync:function (options) {
+        A(options==null || typeof options=="object");
+        var dir=this.assertDir();
+        var path=this.path();
+        var ord;
+        options=dir.convertOptions(options);
+        if (!ord) ord=options.order;
+        return this.act.fs.opendirAsync(this.act.path, options).
+        then(function (di) {
+            var res=[];
+            for (var i=0;i<di.length; i++) {
+                var name=di[i];
+                //if (!options.includeTrashed && dinfo[i].trashed) continue;
+                if (options.excludes[path+name] ) continue;
+                res.push(dir.rel(name));
+            }
+            if (typeof ord=="function" && res.sort) res.sort(ord);
+            return res;
+        });
+    },
     listFiles:function (options) {
         var args=Array.prototype.slice.call(arguments);
         if (typeof args[0]==="function") {
             var f=args.shift();
-            return DU.resolve(this.listFiles.apply(this,args)).then(f);
+            return this.listFilesAsync.apply(this,args).then(f);
         }
         A(options==null || typeof options=="object");
         var dir=this.assertDir();

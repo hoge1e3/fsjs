@@ -6,7 +6,7 @@ define(["FS2","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","Roo
     FS.Class=FSClass;
     FS.DeferredUtil=DU;
     FS.Env=Env;
-    FS.FSClass=FSClass;
+    FS.LSFS=LSFS;
     FS.NativeFS=NativeFS;
     FS.PathUtil=P;
     FS.RootFS=RootFS;

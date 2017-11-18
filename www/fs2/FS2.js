@@ -1,4 +1,5 @@
-define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert){
+define(["extend","PathUtil","MIMETypes","assert","DeferredUtil"],
+function (extend, P, M,assert,DU){
     var FS=function () {
     };
     var fstypes={};
@@ -62,7 +63,7 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
         },
         getContentAsync: function (path, options) {
             if (!this.supportsSync()) stub("getContentAsync");
-            return $.when(this.getContent.apply(this,arguments));
+            return DU.resolve(this.getContent.apply(this,arguments));
         },
         setContent: function (path, content, options) {
             // content: String|ArrayBuffer|InputStream|Reader
@@ -71,8 +72,8 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
         setContentAsync: function (path, content, options) {
             var t=this;
             if (!t.supportsSync()) stub("setContentAsync");
-            return $.when(content).then(function (content) {
-                return $.when(t.setContent(path,content,options));
+            return DU.resolve(content).then(function (content) {
+                return DU.resolve(t.setContent(path,content,options));
             });
         },
         appendContent: function (path, content, options) {
@@ -83,8 +84,8 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
         appendContentAsync: function (path, content, options) {
             var t=this;
             if (!t.supportsSync()) stub("appendContentAsync");
-            return $.when(content).then(function (content) {
-                return $.when(t.appendContent(path,content,options));
+            return DU.resolve(content).then(function (content) {
+                return DU.resolve(t.appendContent(path,content,options));
             });
         },
         getMetaInfo: function (path, options) {
@@ -106,6 +107,10 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
         opendir: function (path, options) {
             //ret: [String] || Stream<string> // https://nodejs.org/api/stream.html#stream_class_stream_readable
             stub("opendir");
+        },
+        opendirAsync: function (path, options) {
+            if (!this.supportsSync()) stub("opendirAsync");
+            return DU.resolve(this.opendir.apply(this,arguments));
         },
         cp: function(path, dst, options) {
             assert.is(arguments,[P.Absolute,P.Absolute]);
@@ -324,7 +329,7 @@ define(["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert)
             //var r=this.resolveFS(path);
             //return new SFile(r.fs, r.path);
         }*/
-        
+
     });
     return FS;
 });

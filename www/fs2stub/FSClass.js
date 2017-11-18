@@ -1,1 +1,1 @@
-define(["FS"],function (FS){return FS.FSClass;});
+define(["FS"],function (FS){return FS.Class;});

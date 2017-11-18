@@ -6,26 +6,29 @@ function (SFile,JSZip,fsv,Util,M,DU) {
         options=options||{};
         var zip = new JSZip();
         function loop(dst, dir) {
-            dir.each(function (f) {
+            return dir.each(function (f) {
                 if (f.isDir()) {
                     var sf=dst.folder(f.name());
-                    loop(sf, f);
+                    return loop(sf, f);
                 } else {
-                    dst.file(f.name(),f.text());
+                    return f.getContentAsync(function (c) {
+                        dst.file(f.name(),c.toArrayBuffer());
+                    });
                 }
             });
         }
-        loop(zip, dir);
-        return zip.generateAsync({
-            type:"arraybuffer",
-            compression:"DEFLATE"
+        return loop(zip, dir).then(function () {
+            return zip.generateAsync({
+                type:"arraybuffer",
+                compression:"DEFLATE"
+            });
         }).then(function (content) {
             if (SFile.is(dstZip)) {
                 return dstZip.setBytes(content);
             } else {
                 saveAs(
                     new Blob([content],{type:"application/zip"}),
-                    dir.name().replace(/\/$/,"")+".zip" 
+                    dir.name().replace(/[\/\\]$/,"")+".zip"
                 );
             }
         });
@@ -71,7 +74,7 @@ function (SFile,JSZip,fsv,Util,M,DU) {
                     }
                     if (SFile.is(res)) {
                         if (dest.path()!==res.path()) s.redirectedTo=res;
-                        dest=res;                    
+                        dest=res;
                     }
                     if (dest) return dest.setContent(c);
                 });
