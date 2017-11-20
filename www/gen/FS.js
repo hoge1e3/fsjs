@@ -520,7 +520,251 @@ define('MIMETypes',[], function () {
       ".tonyu":"text/tonyu"
    };
 });
-define('FS2',["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,assert){
+define('DeferredUtil',[], function () {
+    //  promise.then(S,F)  and promise.then(S).fail(F) is not same!
+    //  ->  when fail on S,  F is executed?
+    var DU;
+    var DUBRK=function(r){this.res=r;};
+    DU={
+        isNativePromise: function (p) {
+            return p && (typeof p.then==="function") &&
+            (typeof p.promise!=="function") && (typeof p.catch==="function") ;
+        },
+        isJQPromise: function (p) {
+            return p && (typeof p.then==="function") &&
+            (typeof p.promise==="function") &&(typeof p.fail==="function") ;
+        },
+        isPromise: function (p) {
+            return p && (typeof p.then==="function") &&
+            ((typeof p.promise==="function") || (typeof p.catch==="function")) ;
+        },
+        all: function (a) {
+            //var a=Array.prototype.slice.call(arguments);
+            return DU.promise(function (succ,fail) {
+                var res=[],rest=a.length;
+                a.forEach(function (p, i) {
+                    DU.resolve(p).then(function (r) {
+                        res[i]=r;
+                        rest--;
+                        if (rest===0) {
+                            succ(res);
+                        }
+                    },fail);
+                });
+            });
+        },
+        resolve: function (p) {
+            if (DU.config.useJQ && DU.isJQPromise(p)) return p;
+            if (!DU.config.useJQ && DU.isNativePromise(p)) return p;
+            return DU.promise(function (succ,fail) {
+                if (DU.isPromise(p)) {
+                    p.then(succ,fail);
+                } else {
+                    succ(p);
+                }
+            });
+            /*if (DU.isPromise(p)) { // NO! it returns Promise when using JQPromise and vise versa.
+                return f;
+            }
+            if (DU.confing.useJQ) {
+                return $.when(p);
+            }*/
+        },
+        assertResolved: function (p) {
+            var res,resolved;
+            p.then(function (r) {
+                res=r;
+                resolved=true;
+            });
+            if (!resolved) {
+                console.log(r);
+                throw new Error("Promise not resolved");
+            }
+            return res;
+        },
+        /*toJQPromise: function (p) {// From native Promise
+            if (!p) return $.when(p);
+            if ($.isFunction(p.promise)) return p;
+            if (!$.isFunction(p.then) || !$.isFunction(p.catch)) return $.when(p);
+            var d=new $.Deferred();
+            p.then(function (r) {
+                d.resolve(r);
+            }).catch(function (r) {
+                d.reject(r);
+            });
+            return d.promise();
+        },*/
+        ensureDefer: function (v) {
+            return DU.promise(function (resolve,reject) {
+                var isDeferred;
+                DU.resolve(v).then(function (r) {
+                    if (!isDeferred) {
+                        setTimeout(function () {
+                            resolve(r);
+                        },0);
+                    } else {
+                        resolve(r);
+                    }
+                }).fail(function (r) {
+                    if (!isDeferred) {
+                        setTimeout(function () {
+                            reject(r);
+                        },0);
+                    } else {
+                        reject(r);
+                    }
+                });
+                isDeferred=true;
+            });
+        },
+        directPromise:function (v) {
+            return DU.timeout(v,0);
+        },
+        then: function (f) {
+            return DU.directPromise().then(f);
+        },
+        timeout:function (timeout,value) {
+            return DU.promise(function (resolve) {
+                setTimeout(function () {resolve(value);},timeout||0);
+            });
+        },
+        funcPromise:function (f) {
+            if (DU.config.useJQ) {
+                var d=new $.Deferred();
+                try {
+                    f(function (v) {
+                        d.resolve(v);
+                    },function (e) {
+                        d.reject(e);
+                    });
+                }catch(e) {
+                    d.reject(e);
+                }
+                return d.promise();
+            } else if (DU.external.Promise) {
+                return new DU.external.Promise(function (resolve,reject) {
+                    try {
+                        f(resolve,reject);
+                    }catch(e) {
+                        reject(e);
+                    }
+                });
+            } else {
+                throw new Error("promise is not found");
+            }
+        },
+        reject: function (e) {
+            if (DU.config.useJQ) {
+                var d=new $.Deferred();
+                d.reject(e);
+                return d.promise();
+            } else {
+                return new JQ.external.Promise(function (s,rej) {
+                    rej(e);
+                });
+            }
+        },
+        throwPromise:function (e) {
+            if (DU.config.useJQ) {
+                var d=new $.Deferred();
+                setTimeout(function () {
+                    d.reject(e);
+                }, 0);
+                return d.promise();
+            } else {
+                return new JQ.external.Promise(function (s,rej) {
+                    rej(e);
+                });
+            }
+        },
+        throwF: function (f) {
+            return function () {
+                try {
+                    return f.apply(this,arguments);
+                } catch(e) {
+                    console.log(e,e.stack);
+                    return DU.throwPromise(e);
+                }
+            };
+        },
+        each: function (set,f) {
+            if (set instanceof Array) {
+                return DU.loop(function (i) {
+                    if (i>=set.length) return DU.brk();
+                    return DU.resolve(f(set[i],i)).then(function () {
+                        return i+1;
+                    });
+                },0);
+            } else {
+                var objs=[];
+                for (var i in set) {
+                    objs.push({k:i,v:set[i]});
+                }
+                return DU.each(objs,function (e) {
+                    return f(e.k, e.v);
+                });
+            }
+        },
+        loop: function (f,r) {
+            try {
+                var err;
+                while(true) {
+                    if (r instanceof DUBRK) return DU.when1(r.res);
+                    var deff1=true, deff2=false;
+                    // ★ not deffered  ☆  deferred
+                    var r1=f(r);
+                    var dr=DU.resolve(r1).then(function (r2) {
+                        r=r2;
+                        deff1=false;
+                        if (r instanceof DUBRK) return r.res;
+                        if (deff2) return DU.loop(f,r); //☆
+                    }).fail(function (e) {
+                        deff1=false;
+                        err=e;
+                    });
+                    if (err) throw err;
+                    deff2=true;
+                    if (deff1) return dr;//☆
+                    //★
+                }
+            }catch (e) {
+                return DU.reject(e);
+            }
+        },
+        brk: function (res) {
+            return new DUBRK(res);
+        },
+        tryLoop: function (f,r) {
+            return DU.loop(DU.tr(f),r);
+        },
+        tryEach: function (s,f) {
+            return DU.loop(s,DU.tr(f));
+        },
+        documentReady:function () {
+            return DU.callbackToPromise(function (s) {$(s);});
+        },
+        requirejs:function (modules) {
+            if (!window.requirejs) throw new Error("requirejs is not loaded");
+            return DU.callbackToPromise(function (s) {
+                window.requirejs(modules,s);
+            });
+        }
+    };
+    DU.NOP=function (r) {return r;};
+    DU.begin=DU.try=DU.tr=DU.throwF;
+    DU.promise=DU.callbackToPromise=DU.funcPromise;
+    DU.when1=DU.resolve;
+    DU.config={};
+    if (window.$ && window.$.Deferred) {
+        DU.config.useJQ=true;
+    }
+    DU.external={Promise:window.Promise};
+    if (!window.DeferredUtil) window.DeferredUtil=DU;
+    return DU;
+});
+
+define('FS2',["extend","PathUtil","MIMETypes","assert","DeferredUtil"],
+function (extend, P, M,assert,DU){
     var FS=function () {
     };
     var fstypes={};
@@ -584,7 +828,7 @@ define('FS2',["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,a
         },
         getContentAsync: function (path, options) {
             if (!this.supportsSync()) stub("getContentAsync");
-            return $.when(this.getContent.apply(this,arguments));
+            return DU.resolve(this.getContent.apply(this,arguments));
         },
         setContent: function (path, content, options) {
             // content: String|ArrayBuffer|InputStream|Reader
@@ -593,8 +837,8 @@ define('FS2',["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,a
         setContentAsync: function (path, content, options) {
             var t=this;
             if (!t.supportsSync()) stub("setContentAsync");
-            return $.when(content).then(function (content) {
-                return $.when(t.setContent(path,content,options));
+            return DU.resolve(content).then(function (content) {
+                return DU.resolve(t.setContent(path,content,options));
             });
         },
         appendContent: function (path, content, options) {
@@ -605,8 +849,8 @@ define('FS2',["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,a
         appendContentAsync: function (path, content, options) {
             var t=this;
             if (!t.supportsSync()) stub("appendContentAsync");
-            return $.when(content).then(function (content) {
-                return $.when(t.appendContent(path,content,options));
+            return DU.resolve(content).then(function (content) {
+                return DU.resolve(t.appendContent(path,content,options));
             });
         },
         getMetaInfo: function (path, options) {
@@ -628,6 +872,10 @@ define('FS2',["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,a
         opendir: function (path, options) {
             //ret: [String] || Stream<string> // https://nodejs.org/api/stream.html#stream_class_stream_readable
             stub("opendir");
+        },
+        opendirAsync: function (path, options) {
+            if (!this.supportsSync()) stub("opendirAsync");
+            return DU.resolve(this.opendir.apply(this,arguments));
         },
         cp: function(path, dst, options) {
             assert.is(arguments,[P.Absolute,P.Absolute]);
@@ -846,7 +1094,7 @@ define('FS2',["extend","PathUtil","MIMETypes","assert"],function (extend, P, M,a
             //var r=this.resolveFS(path);
             //return new SFile(r.fs, r.path);
         }*/
-        
+
     });
     return FS;
 });
@@ -1418,7 +1666,7 @@ define('LSFS',["FS2","PathUtil","extend","assert","Util","Content"],
         assert(storage," new LSFS fail: no storage");
     	this.storage=storage;
     	this.options=options||{};
-    	this.dirCache={};
+    	if (this.options.useDirCache) this.dirCache={};
     };
     var isDir = P.isDir.bind(P);
     var up = P.up.bind(P);
@@ -1430,16 +1678,18 @@ define('LSFS',["FS2","PathUtil","extend","assert","Util","Content"],
     function now(){
         return new Date().getTime();
     }
-    LSFS.ramDisk=function () {
+    LSFS.ramDisk=function (options) {
         var s={};
         s[P.SEP]="{}";
-        return new LSFS(s);
+        options=options||{};
+        if (!("useDirCache" in options)) options.useDirCache=true;
+        return new LSFS(s,options);
     };
     FS.addFSType("localStorage",function (path, options) {
-        return new LSFS(localStorage);
+        return new LSFS(localStorage,options);
     });
     FS.addFSType("ram",function (path, options) {
-        return LSFS.ramDisk();
+        return LSFS.ramDisk(options);
     });
 
     LSFS.now=now;
@@ -1487,7 +1737,7 @@ define('LSFS',["FS2","PathUtil","extend","assert","Util","Content"],
         if (path == null) throw new Error("getDir: Null path");
         if (!endsWith(path, SEP)) path += SEP;
         assert(this.inMyFS(path));
-        if (this.dirCache[path]) return this.dirCache[path];         
+        if (this.dirCache && this.dirCache[path]) return this.dirCache[path];
         var dinfo =  {};
         try {
             var dinfos = this.getItem(path);
@@ -1497,13 +1747,14 @@ define('LSFS',["FS2","PathUtil","extend","assert","Util","Content"],
         } catch (e) {
             console.log("dinfo err : " , path , dinfos);
         }
-        return this.dirCache[path]=dinfo;
+        if (this.dirCache) this.dirCache[path]=dinfo;
+        return dinfo;
     };
     LSFS.prototype.putDirInfo=function putDirInfo(path, dinfo, trashed) {
   	    assert.is(arguments,[P.AbsDir, Object]);
   	    if (!isDir(path)) throw new Error("Not a directory : " + path);
   	    assert(this.inMyFS(path));
-  	    this.dirCache[path] = dinfo;
+  	    if (this.dirCache) this.dirCache[path] = dinfo;
   	    this.setItem(path, JSON.stringify(dinfo));
         var ppath = up(path);
         if (ppath == null) return;
@@ -1712,7 +1963,7 @@ define('LSFS',["FS2","PathUtil","extend","assert","Util","Content"],
             this.assertWriteable(path);
             if (!this.itemExists(path)) {
                 if (P.isDir(path)) {
-                    this.dirCache[path]={};
+                    if (this.dirCache) this.dirCache[path]={};
                     this.setItem(path,"{}");
                 } else {
                     this.setItem(path,"");
@@ -1751,6 +2002,7 @@ define('LSFS',["FS2","PathUtil","extend","assert","Util","Content"],
     return LSFS;
 
 });
+
 /**
  *
  * jquery.binarytransport.js
@@ -1804,239 +2056,6 @@ $.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
     }
 });
 define("jquery.binarytransport", function(){});
-
-define('DeferredUtil',[], function () {
-    //  promise.then(S,F)  and promise.then(S).fail(F) is not same!
-    //  ->  when fail on S,  F is executed?
-    var DU;
-    var DUBRK=function(r){this.res=r;};
-    DU={
-        isNativePromise: function (p) {
-            return p && (typeof p.then==="function") && 
-            (typeof p.promise!=="function") && (typeof p.catch==="function") ;
-        },
-        isJQPromise: function (p) {
-            return p && (typeof p.then==="function") && 
-            (typeof p.promise==="function") &&(typeof p.fail==="function") ;
-        },
-        isPromise: function (p) {
-            return p && (typeof p.then==="function") && 
-            ((typeof p.promise==="function") || (typeof p.catch==="function")) ;
-        },
-        all: function (a) {
-            //var a=Array.prototype.slice.call(arguments);
-            return DU.promise(function (succ,fail) {
-                var res=[],rest=a.length;
-                a.forEach(function (p, i) {
-                    DU.resolve(p).then(function (r) {
-                        res[i]=r;
-                        rest--;
-                        if (rest===0) {
-                            succ(res);
-                        }
-                    },function (e) {
-                        throw e;
-                    });
-                });
-            });
-        },
-        resolve: function (p) {
-            if (DU.config.useJQ && DU.isJQPromise(p)) return p;
-            if (!DU.config.useJQ && DU.isNativePromise(p)) return p;
-            return DU.promise(function (succ,fail) {
-                if (DU.isPromise(p)) {
-                    p.then(succ,fail);
-                } else {
-                    succ(p);
-                }            
-            });
-            /*if (DU.isPromise(p)) { // NO! it returns Promise when using JQPromise and vise versa.
-                return f;    
-            }  
-            if (DU.confing.useJQ) {
-                return $.when(p);
-            }*/
-        },
-        /*toJQPromise: function (p) {// From native Promise 
-            if (!p) return $.when(p);
-            if ($.isFunction(p.promise)) return p;
-            if (!$.isFunction(p.then) || !$.isFunction(p.catch)) return $.when(p);
-            var d=new $.Deferred();
-            p.then(function (r) {
-                d.resolve(r);    
-            }).catch(function (r) {
-                d.reject(r);    
-            });
-            return d.promise();
-        },*/
-        ensureDefer: function (v) {
-            return DU.promise(function (resolve,reject) {
-                var isDeferred;
-                DU.resolve(v).then(function (r) {
-                    if (!isDeferred) {
-                        setTimeout(function () {
-                            resolve(r);
-                        },0);
-                    } else {
-                        resolve(r);
-                    }
-                }).fail(function (r) {
-                    if (!isDeferred) {
-                        setTimeout(function () {
-                            reject(r);
-                        },0);
-                    } else {
-                        reject(r);
-                    }
-                });
-                isDeferred=true;
-            });
-        },
-        directPromise:function (v) {
-            return DU.timeout(v,0);
-        },
-        then: function (f) {
-            return DU.directPromise().then(f);
-        },
-        timeout:function (timeout,value) {
-            return DU.promise(function (resolve) {
-                setTimeout(function () {resolve(value);},timeout||0);
-            });
-        },
-        funcPromise:function (f) {
-            if (DU.config.useJQ) {
-                var d=new $.Deferred();
-                try {
-                    f(function (v) {
-                        d.resolve(v);
-                    },function (e) {
-                        d.reject(e);
-                    });
-                }catch(e) {
-                    d.reject(e);
-                }
-                return d.promise();
-            } else if (DU.external.Promise) {
-                return new DU.external.Promise(function (resolve,reject) {
-                    try {
-                        f(resolve,reject);
-                    }catch(e) {
-                        reject(e);
-                    }
-                });
-            } else {
-                throw new Error("promise is not found");
-            }
-        },
-        reject: function (e) {
-            if (DU.config.useJQ) {
-                var d=new $.Deferred();
-                d.reject(e);
-                return d.promise();
-            } else {
-                return new JQ.external.Promise(function (s,rej) {
-                    rej(e);
-                });
-            }
-        },
-        throwPromise:function (e) {
-            if (DU.config.useJQ) {
-                var d=new $.Deferred();
-                setTimeout(function () {
-                    d.reject(e);
-                }, 0);
-                return d.promise();
-            } else {
-                return new JQ.external.Promise(function (s,rej) {
-                    rej(e);
-                });
-            }
-        },
-        throwF: function (f) {
-            return function () {
-                try {
-                    return f.apply(this,arguments);
-                } catch(e) {
-                    console.log(e,e.stack);
-                    return DU.throwPromise(e);
-                }
-            };
-        },
-        each: function (set,f) {
-            if (set instanceof Array) {
-                return DU.loop(function (i) {
-                    if (i>=set.length) return DU.brk();
-                    return DU.resolve(f(set[i],i)).then(function () {
-                        return i+1;
-                    });
-                },0);
-            } else {
-                var objs=[];
-                for (var i in set) {
-                    objs.push({k:i,v:set[i]});
-                }
-                return DU.each(objs,function (e) {
-                    return f(e.k, e.v);
-                });
-            }
-        },
-        loop: function (f,r) {
-            try {
-                var err;
-                while(true) {
-                    if (r instanceof DUBRK) return DU.when1(r.res);
-                    var deff1=true, deff2=false;
-                    // ★ not deffered  ☆  deferred
-                    var r1=f(r);
-                    var dr=DU.resolve(r1).then(function (r2) {
-                        r=r2;
-                        deff1=false;
-                        if (r instanceof DUBRK) return r.res;
-                        if (deff2) return DU.loop(f,r); //☆
-                    }).fail(function (e) {
-                        deff1=false;
-                        err=e;
-                    });
-                    if (err) throw err; 
-                    deff2=true;
-                    if (deff1) return dr;//☆
-                    //★
-                }
-            }catch (e) {
-                return DU.reject(e);
-            }
-        },
-        brk: function (res) {
-            return new DUBRK(res);
-        },
-        tryLoop: function (f,r) {
-            return DU.loop(DU.tr(f),r);
-        },
-        tryEach: function (s,f) {
-            return DU.loop(s,DU.tr(f));
-        },
-        documentReady:function () {
-            return DU.callbackToPromise(function (s) {$(s);});
-        },
-        requirejs:function (modules) {
-            if (!window.requirejs) throw new Error("requirejs is not loaded");
-            return DU.callbackToPromise(function (s) {
-                window.requirejs(modules,s);
-            });
-        }
-    };
-    DU.NOP=function (r) {return r;};
-    DU.begin=DU.try=DU.tr=DU.throwF;
-    DU.promise=DU.callbackToPromise=DU.funcPromise;
-    DU.when1=DU.resolve;
-    DU.config={};
-    if (window.$ && window.$.Deferred) {
-        DU.config.useJQ=true;
-    }
-    DU.external={Promise:window.Promise};
-    if (!window.DeferredUtil) window.DeferredUtil=DU;
-    return DU;
-});
 
 define('WebFS',["FS2","jquery.binarytransport","DeferredUtil","Content","PathUtil"],
         function (FS,j,DU,Content,P) {
@@ -2460,13 +2479,13 @@ SFile.prototype={
     },*/
     each:function (f,options) {
         var dir=this.assertDir();
-        return dir.listFiles(function (ls) {
+        return dir.listFilesAsync(options).then(function (ls) {
             return DU.each(ls,f);// ls.forEach(f)
-        },options);
+        });
     },
     eachrev:function (f,options) {
         var dir=this.assertDir();
-        return dir.listFiles(options,function (ls) {
+        return dir.listFilesAsync(options).then(function (ls) {
             return DU.each(ls.reverse(),f);// ls.forEach(f)
         });
     },
@@ -2477,11 +2496,33 @@ SFile.prototype={
             else return fun(f);
         },options);
     },
+    listFilesAsync:function (options) {
+        A(options==null || typeof options=="object");
+        var dir=this.assertDir();
+        var path=this.path();
+        var ord;
+        options=dir.convertOptions(options);
+        if (!ord) ord=options.order;
+        return this.act.fs.opendirAsync(this.act.path, options).
+        then(function (di) {
+            var res=[];
+            for (var i=0;i<di.length; i++) {
+                var name=di[i];
+                //if (!options.includeTrashed && dinfo[i].trashed) continue;
+                if (options.excludes[path+name] ) continue;
+                res.push(dir.rel(name));
+            }
+            if (typeof ord=="function" && res.sort) res.sort(ord);
+            return res;
+        });
+    },
     listFiles:function (options) {
         var args=Array.prototype.slice.call(arguments);
+        return DU.assertResolved(this.listFilesAsync.apply(this,args));
+        //----------ABOLISHED
         if (typeof args[0]==="function") {
             var f=args.shift();
-            return DU.resolve(this.listFiles.apply(this,args)).then(f);
+            return this.listFilesAsync.apply(this,args).then(f);
         }
         A(options==null || typeof options=="object");
         var dir=this.assertDir();
@@ -2693,26 +2734,29 @@ function (SFile,JSZip,fsv,Util,M,DU) {
         options=options||{};
         var zip = new JSZip();
         function loop(dst, dir) {
-            dir.each(function (f) {
+            return dir.each(function (f) {
                 if (f.isDir()) {
                     var sf=dst.folder(f.name());
-                    loop(sf, f);
+                    return loop(sf, f);
                 } else {
-                    dst.file(f.name(),f.text());
+                    return f.getContentAsync(function (c) {
+                        dst.file(f.name(),c.toArrayBuffer());
+                    });
                 }
             });
         }
-        loop(zip, dir);
-        return zip.generateAsync({
-            type:"arraybuffer",
-            compression:"DEFLATE"
+        return loop(zip, dir).then(function () {
+            return zip.generateAsync({
+                type:"arraybuffer",
+                compression:"DEFLATE"
+            });
         }).then(function (content) {
             if (SFile.is(dstZip)) {
                 return dstZip.setBytes(content);
             } else {
                 saveAs(
                     new Blob([content],{type:"application/zip"}),
-                    dir.name().replace(/\/$/,"")+".zip" 
+                    dir.name().replace(/[\/\\]$/,"")+".zip"
                 );
             }
         });
@@ -2758,7 +2802,7 @@ function (SFile,JSZip,fsv,Util,M,DU) {
                     }
                     if (SFile.is(res)) {
                         if (dest.path()!==res.path()) s.redirectedTo=res;
-                        dest=res;                    
+                        dest=res;
                     }
                     if (dest) return dest.setContent(c);
                 });
@@ -2771,6 +2815,7 @@ function (SFile,JSZip,fsv,Util,M,DU) {
     zip.JSZip=JSZip;
     return zip;
 });
+
 define('FS',["FS2","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","RootFS","Content","zip","DeferredUtil"],
         function (FSClass,NativeFS,LSFS,WebFS, P,Env,A,SFile,RootFS,Content,zip,DU) {
     var FS={};
@@ -2779,7 +2824,7 @@ define('FS',["FS2","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile"
     FS.Class=FSClass;
     FS.DeferredUtil=DU;
     FS.Env=Env;
-    FS.FSClass=FSClass;
+    FS.LSFS=LSFS;
     FS.NativeFS=NativeFS;
     FS.PathUtil=P;
     FS.RootFS=RootFS;
