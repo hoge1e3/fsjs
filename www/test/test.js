@@ -163,7 +163,24 @@ try{
                 return i;
             //});
         }).fail(function (e) {console.log("DU.ERR",e);});
-
+        DU.each({a:1,b:2,c:3},function(k,v) {
+            return DU.timeout(500).then(function ()  {
+                console.log("DU.EACH t/o",k,v);
+                if (v==2) v.c.d;
+                return v;
+            });
+        }).fail(function (e) {console.log("DU.ERR",e);});
+        DU.all([DU.timeout(500,"A"),DU.timeout(200,"B")]).then(function (r) {
+            if (r.join(",")!=="A,B") alert(r.join(","));
+            console.log("DU.all1",r);
+        });
+        DU.all([DU.timeout(500,"A"),DU.timeout(200,"B"),DU.reject("ERAA")]).then(function (r) {
+            alert("DU.all2 Shoult not t reach here");
+            console.log("DU.all2",r);
+        },function (e) {
+            if (e!=="ERAA") alert(e);
+            console.log("DU.all rej",e);
+        });
         setTimeout(function () {location.reload();},10000);
     } else {
         try {
@@ -175,6 +192,7 @@ try{
             assert(testd.rel("sub/").exists());
             assert(testd.rel("sub/test2.txt").text()===romd.rel("Actor.tonyu").text() );
             chkRecur(testd,{},"test.txt,sub/test2.txt");
+            assert.eq(testd.ls().join(","), "test.txt,sub/");
             chkRecur(testd,{excludes:["sub/"]}, "test.txt");
             testd.rel("test.txt").rm();
             chkRecur(testd,{},"sub/test2.txt");

@@ -5,15 +5,15 @@ define([], function () {
     var DUBRK=function(r){this.res=r;};
     DU={
         isNativePromise: function (p) {
-            return p && (typeof p.then==="function") && 
+            return p && (typeof p.then==="function") &&
             (typeof p.promise!=="function") && (typeof p.catch==="function") ;
         },
         isJQPromise: function (p) {
-            return p && (typeof p.then==="function") && 
+            return p && (typeof p.then==="function") &&
             (typeof p.promise==="function") &&(typeof p.fail==="function") ;
         },
         isPromise: function (p) {
-            return p && (typeof p.then==="function") && 
+            return p && (typeof p.then==="function") &&
             ((typeof p.promise==="function") || (typeof p.catch==="function")) ;
         },
         all: function (a) {
@@ -27,9 +27,7 @@ define([], function () {
                         if (rest===0) {
                             succ(res);
                         }
-                    },function (e) {
-                        throw e;
-                    });
+                    },fail);
                 });
             });
         },
@@ -41,24 +39,36 @@ define([], function () {
                     p.then(succ,fail);
                 } else {
                     succ(p);
-                }            
+                }
             });
             /*if (DU.isPromise(p)) { // NO! it returns Promise when using JQPromise and vise versa.
-                return f;    
-            }  
+                return f;
+            }
             if (DU.confing.useJQ) {
                 return $.when(p);
             }*/
         },
-        /*toJQPromise: function (p) {// From native Promise 
+        assertResolved: function (p) {
+            var res,resolved;
+            p.then(function (r) {
+                res=r;
+                resolved=true;
+            });
+            if (!resolved) {
+                console.log(r);
+                throw new Error("Promise not resolved");
+            }
+            return res;
+        },
+        /*toJQPromise: function (p) {// From native Promise
             if (!p) return $.when(p);
             if ($.isFunction(p.promise)) return p;
             if (!$.isFunction(p.then) || !$.isFunction(p.catch)) return $.when(p);
             var d=new $.Deferred();
             p.then(function (r) {
-                d.resolve(r);    
+                d.resolve(r);
             }).catch(function (r) {
-                d.reject(r);    
+                d.reject(r);
             });
             return d.promise();
         },*/
@@ -190,7 +200,7 @@ define([], function () {
                         deff1=false;
                         err=e;
                     });
-                    if (err) throw err; 
+                    if (err) throw err;
                     deff2=true;
                     if (deff1) return dr;//☆
                     //★

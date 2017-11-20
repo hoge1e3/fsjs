@@ -347,13 +347,13 @@ SFile.prototype={
     },*/
     each:function (f,options) {
         var dir=this.assertDir();
-        return dir.listFiles(function (ls) {
+        return dir.listFilesAsync(options).then(function (ls) {
             return DU.each(ls,f);// ls.forEach(f)
-        },options);
+        });
     },
     eachrev:function (f,options) {
         var dir=this.assertDir();
-        return dir.listFiles(options,function (ls) {
+        return dir.listFilesAsync(options).then(function (ls) {
             return DU.each(ls.reverse(),f);// ls.forEach(f)
         });
     },
@@ -386,6 +386,8 @@ SFile.prototype={
     },
     listFiles:function (options) {
         var args=Array.prototype.slice.call(arguments);
+        return DU.assertResolved(this.listFilesAsync.apply(this,args));
+        //----------ABOLISHED
         if (typeof args[0]==="function") {
             var f=args.shift();
             return this.listFilesAsync.apply(this,args).then(f);

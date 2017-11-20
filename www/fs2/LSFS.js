@@ -4,7 +4,7 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
         assert(storage," new LSFS fail: no storage");
     	this.storage=storage;
     	this.options=options||{};
-    	this.dirCache={};
+    	if (this.options.useDirCache) this.dirCache={};
     };
     var isDir = P.isDir.bind(P);
     var up = P.up.bind(P);
@@ -16,16 +16,18 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
     function now(){
         return new Date().getTime();
     }
-    LSFS.ramDisk=function () {
+    LSFS.ramDisk=function (options) {
         var s={};
         s[P.SEP]="{}";
-        return new LSFS(s);
+        options=options||{};
+        if (!("useDirCache" in options)) options.useDirCache=true;
+        return new LSFS(s,options);
     };
     FS.addFSType("localStorage",function (path, options) {
-        return new LSFS(localStorage);
+        return new LSFS(localStorage,options);
     });
     FS.addFSType("ram",function (path, options) {
-        return LSFS.ramDisk();
+        return LSFS.ramDisk(options);
     });
 
     LSFS.now=now;
@@ -73,7 +75,7 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
         if (path == null) throw new Error("getDir: Null path");
         if (!endsWith(path, SEP)) path += SEP;
         assert(this.inMyFS(path));
-        if (this.dirCache[path]) return this.dirCache[path];         
+        if (this.dirCache && this.dirCache[path]) return this.dirCache[path];
         var dinfo =  {};
         try {
             var dinfos = this.getItem(path);
@@ -83,13 +85,14 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
         } catch (e) {
             console.log("dinfo err : " , path , dinfos);
         }
-        return this.dirCache[path]=dinfo;
+        if (this.dirCache) this.dirCache[path]=dinfo;
+        return dinfo;
     };
     LSFS.prototype.putDirInfo=function putDirInfo(path, dinfo, trashed) {
   	    assert.is(arguments,[P.AbsDir, Object]);
   	    if (!isDir(path)) throw new Error("Not a directory : " + path);
   	    assert(this.inMyFS(path));
-  	    this.dirCache[path] = dinfo;
+  	    if (this.dirCache) this.dirCache[path] = dinfo;
   	    this.setItem(path, JSON.stringify(dinfo));
         var ppath = up(path);
         if (ppath == null) return;
@@ -298,7 +301,7 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
             this.assertWriteable(path);
             if (!this.itemExists(path)) {
                 if (P.isDir(path)) {
-                    this.dirCache[path]={};
+                    if (this.dirCache) this.dirCache[path]={};
                     this.setItem(path,"{}");
                 } else {
                     this.setItem(path,"");
