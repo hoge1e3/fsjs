@@ -7,6 +7,7 @@ var reqConf={
             "ShellUI":"../fstools/ShellUI",
             "LocalIframe":"../fstools/LocalIframe",
             "LocalBrowser":"../fstools/LocalBrowser",
+            "FileBrowser":"../fstools/FileBrowser",
             "ShellParser":"../fstools/ShellParser",
             "wget":"../fstools/wget",
             "DragDrop":"../fstools/DragDrop",

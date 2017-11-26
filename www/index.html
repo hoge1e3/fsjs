@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="css/jquery-ui.css">
 <script>
 requirejs.config(reqConf);
-requirejs(["ShellUI","wget","LocalBrowser"], function(shui,wget,lcb){
+requirejs(["ShellUI","wget","LocalBrowser","FileBrowser"], function(shui,wget,lcb,fb){
     onerror=function (a,b,c,d,e) {
         if (e) shui.sh.err(e.stack);
     };
@@ -25,4 +25,3 @@ requirejs(["ShellUI","wget","LocalBrowser"], function(shui,wget,lcb){
 <img id="img"/>
 </body>
 </html>
-

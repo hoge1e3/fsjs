@@ -2,6 +2,9 @@ define(["FS","assert"],
         function (FS,assert) {
     var Shell={};
     var PathUtil=assert(FS.PathUtil);
+    Shell.newCommand=function (name,func) {
+        this[name]=func;
+    };
     Shell.cd=function (dir) {
         Shell.cwd=resolve(dir,true);
         return Shell.pwd();
@@ -100,7 +103,7 @@ define(["FS","assert"],
         file=resolve(file, false);
         if (file.exists()) throw new Error(file+" : exists");
         return file.mkdir();
-        
+
     };
     Shell.cat=function (file,options) {
         file=resolve(file, true);
@@ -185,12 +188,12 @@ define(["FS","assert"],
         return f.exists();
     };
     Shell.dl=function (f) {
-        return f.download();  
+        return f.download();
     };
     Shell.zip=function () {
         var t=this;
         var a=Array.prototype.slice.call(arguments).map(function (e) {
-            if (typeof e==="string") return t.resolve(e);    
+            if (typeof e==="string") return t.resolve(e);
             return e;
         });
         return FS.zip.zip.apply(FS.zip,a);
@@ -198,7 +201,7 @@ define(["FS","assert"],
     Shell.unzip=function () {
         var t=this;
         var a=Array.prototype.slice.call(arguments).map(function (e) {
-            if (typeof e==="string") return t.resolve(e);    
+            if (typeof e==="string") return t.resolve(e);
             return e;
         });
         return FS.zip.unzip.apply(FS.zip,a);
