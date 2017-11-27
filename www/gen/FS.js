@@ -1150,7 +1150,7 @@ return {
 define('Content',["assert","Util"],function (assert,Util) {
     var Content=function () {};
     var extend=Util.extend;
-    // ------ constructor 
+    // ------ constructor
     Content.plainText=function (s,contentType){
         var b=new Content;
         b.contentType=contentType||"text/plain";
@@ -1164,7 +1164,11 @@ define('Content',["assert","Util"],function (assert,Util) {
     };
     Content.buffer2ArrayBuffer = function (a) {
         if (Content.isBuffer(a)) {
-            return assert(new Uint8Array(a).buffer,"n2a: buf is not set");
+            var u=new Uint8Array(a);
+            var r=u.buffer;
+            if (r instanceof ArrayBuffer) return r;
+            var ary=Array.prototype.slice.call(u);
+            return assert(new Uint8Array(ary).buffer,"n2a: buf is not set");
         }
         return assert(a,"n2a: a is not set");
     };
@@ -1278,11 +1282,11 @@ define('Content',["assert","Util"],function (assert,Util) {
         var n = 0;
         var b = 0;
         var e;
-    
+
         if(!num) return (new A(0));
         //if(num < 4) return null;
         //if(num % 4) return null;
-    
+
         // AA     12    1
         // AAA    18    2
         // AAAA   24    3
@@ -1292,7 +1296,7 @@ define('Content',["assert","Util"],function (assert,Util) {
         e = Math.floor(num / 4 * 3);
         if(base64.charAt(num - 1) == '=') e -= 1;
         if(base64.charAt(num - 2) == '=') e -= 1;
-    
+
         var ary_buffer = new A( e );
         var ary_u8 = (Content.isNodeBuffer(ary_buffer) ? ary_buffer : new Uint8Array( ary_buffer ));//new Uint8Array( ary_buffer );
         var i = 0;
@@ -1302,7 +1306,7 @@ define('Content',["assert","Util"],function (assert,Util) {
             if(b === undefined) fail("Invalid letter: "+base64.charCodeAt(i));//return null;
             n = (b << 2);
             i ++;
-    
+
             b = dic[base64.charCodeAt(i)];
             if(b === undefined) fail("Invalid letter: "+base64.charCodeAt(i))
             ary_u8[p] = n | ((b >> 4) & 0x3);
@@ -1310,7 +1314,7 @@ define('Content',["assert","Util"],function (assert,Util) {
             i ++;
             p ++;
             if(p >= e) break;
-    
+
             b = dic[base64.charCodeAt(i)];
             if(b === undefined) fail("Invalid letter: "+base64.charCodeAt(i))
             ary_u8[p] = n | ((b >> 2) & 0xf);
@@ -1318,7 +1322,7 @@ define('Content',["assert","Util"],function (assert,Util) {
             i ++;
             p ++;
             if(p >= e) break;
-    
+
             b = dic[base64.charCodeAt(i)];
             if(b === undefined) fail("Invalid letter: "+base64.charCodeAt(i))
             ary_u8[p] = n | b;
@@ -1332,7 +1336,7 @@ define('Content',["assert","Util"],function (assert,Util) {
         }
         return ary_buffer;
     };
-    
+
     Content.Base64_From_ArrayBuffer=function (ary_buffer){
         var dic = [
             'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P',
@@ -1345,7 +1349,7 @@ define('Content',["assert","Util"],function (assert,Util) {
         var num = ary_u8.length;
         var n = 0;
         var b = 0;
-    
+
         var i = 0;
         while(i < num){
             b = ary_u8[i];
@@ -1353,19 +1357,19 @@ define('Content',["assert","Util"],function (assert,Util) {
             n = (b & 0x03) << 4;
             i ++;
             if(i >= num) break;
-    
+
             b = ary_u8[i];
             base64 += dic[n | (b >> 4)];
             n = (b & 0x0f) << 2;
             i ++;
             if(i >= num) break;
-    
+
             b = ary_u8[i];
             base64 += dic[n | (b >> 6)];
             base64 += dic[(b & 0x3f)];
             i ++;
         }
-    
+
         var m = num % 3;
         if(m){
             base64 += dic[n];
@@ -1377,7 +1381,7 @@ define('Content',["assert","Util"],function (assert,Util) {
         }
         return base64;
     };
-    
+
     Content.hasNodeBuffer=function () {
         return typeof Buffer!="undefined";
     };
@@ -1462,7 +1466,7 @@ define('Content',["assert","Util"],function (assert,Util) {
    	  },
    	  toString: function () {return assert.is(this.url,String);}
    });
-    
+
     return Content;
 });
 
