@@ -15,26 +15,31 @@ define(["FS2","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","Roo
     FS.zip=zip;
     if (typeof window=="object") window.FS=FS;
     var rootFS;
-    var envVar={};
-    var env=new Env(envVar);
+    var env=new Env({});
     DU.external.Promise=zip.JSZip.external.Promise;
     FS.addFSType=FSClass.addFSType;
     FS.availFSTypes=FSClass.availFSTypes;
 
+    FS.setEnvProvider=function (e) {
+        env=e;
+    };
+    FS.getEnvProvider=function () {
+        return env;
+    };
     FS.setEnv=function (key, value) {
         if (typeof key=="object") {
             for (var k in key) {
-                envVar[k]=key[k];
+                env.set(k,key[k]);
             }
         }else {
-            envVar[key]=value;
+            env.set(key,value);
         }
     };
     FS.getEnv=function (key) {
         if (typeof key=="string") {
-            return envVar[key];
+            return env.get(key);
         }else {
-            return envVar;
+            return env.value;
         }
     };
     FS.init=function (fs) {
