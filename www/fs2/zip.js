@@ -11,18 +11,19 @@ function (SFile,JSZip,fsv,Util,M,DU) {
                     var sf=dst.folder(f.name());
                     return loop(sf, f);
                 } else {
-                    return f.getContentAsync(function (c) {
+                    return f.getContent(function (c) {
                         dst.file(f.name(),c.toArrayBuffer());
                     });
                 }
             });
         }
         return loop(zip, dir).then(function () {
-            return zip.generateAsync({
+            return DU.resolve(zip.generateAsync({
                 type:"arraybuffer",
                 compression:"DEFLATE"
-            });
+            }));
         }).then(function (content) {
+            //console.log("zip.con",content);
             if (SFile.is(dstZip)) {
                 return dstZip.setBytes(content);
             } else {

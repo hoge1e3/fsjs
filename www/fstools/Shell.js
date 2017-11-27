@@ -188,6 +188,7 @@ define(["FS","assert"],
         return f.exists();
     };
     Shell.dl=function (f) {
+        f=this.resolve(f||".");
         return f.download();
     };
     Shell.zip=function () {

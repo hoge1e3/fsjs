@@ -465,6 +465,7 @@ SFile.prototype={
         return new Blob([this.bytes()],{type:this.contentType()});
     },
     download: function () {
+        if (this.isDir()) throw new Error(this+": Download dir is not support yet. Use 'zip' instead.");
         saveAs(this.getBlob(),this.name());;
     }
 };
