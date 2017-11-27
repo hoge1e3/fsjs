@@ -1,4 +1,4 @@
-define(["SFile","jszip.min","FileSaver.min","Util","MIMETypes","DeferredUtil"],
+define(["SFile","jszip","FileSaver.min","Util","MIMETypes","DeferredUtil"],
 function (SFile,JSZip,fsv,Util,M,DU) {
     var zip={};
     zip.zip=function (dir,dstZip,options) {
@@ -8,7 +8,7 @@ function (SFile,JSZip,fsv,Util,M,DU) {
         function loop(dst, dir) {
             return dir.each(function (f) {
                 if (f.isDir()) {
-                    var sf=dst.folder(f.name());
+                    var sf=dst.folder(f.name().replace(/[\/\\]$/,""));
                     return loop(sf, f);
                 } else {
                     return f.getContent(function (c) {
