@@ -183,7 +183,7 @@ function (extend, P, M,assert,DU){
         },
         getContentType: function (path, options) {
             var e=(P.ext(path)+"").toLowerCase();
-            return M[e] || (options||{}).def || "text/plain";
+            return M[e] || (options||{}).def || "application/octet-stream";
         },
         getBlob: function (path, options) {
             var c=this.getContent(path);

@@ -1,5 +1,5 @@
 // This is kowareta! because r.js does not generate module name:
-//   define("FSLib",[], function () { ... 
+//   define("FSLib",[], function () { ...
 //(function (global) {
 //var useGlobal=(typeof global.define!="function");
 //var define=(useGlobal ? define=function(_,f){f();} : global.define);
@@ -19,7 +19,7 @@ define([],function () {
     			var res=func(R.doLoad,module,module.exports);
     			return res || module.exports;
     		};
-		} else { 
+		} else {
     		R.setReqs( m, reqs);
     		m.func=function () {
     			return func.apply(this, R.getObjs(reqs));
@@ -82,10 +82,10 @@ define([],function () {
 	    var str=f+"";
 	    var res=[];
 	    str.replace(/require\s*\(\s*["']([^"']+)["']\s*\)/g,function (m,a) {
-	       res.push(a); 
+	       res.push(a);
 	    });
 	    return res;
 	};
 	R.modules={};
-	requireSimulator=R;
+	//requireSimulator=R;
 //----------

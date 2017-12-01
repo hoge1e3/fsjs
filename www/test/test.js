@@ -162,14 +162,14 @@ try{
                 if (i==2) i.c.d;
                 return i;
             //});
-        }).fail(function (e) {console.log("DU.ERR",e);});
+        }).fail(function (e) {console.log("DU.ERR",(e+"").replace(/\n.*/,""));});
         DU.each({a:1,b:2,c:3},function(k,v) {
             return DU.timeout(500).then(function ()  {
                 console.log("DU.EACH t/o",k,v);
                 if (v==2) v.c.d;
                 return v;
             });
-        }).fail(function (e) {console.log("DU.ERR",e);});
+        }).fail(function (e) {console.log("DU.ERR",(e+"").replace(/\n.*/,""));});
         DU.all([DU.timeout(500,"A"),DU.timeout(200,"B")]).then(function (r) {
             if (r.join(",")!=="A,B") alert(r.join(","));
             console.log("DU.all1",r);

@@ -1,5 +1,5 @@
-define(["FS2","assert","PathUtil","extend","MIMETypes","Content"],
-        function (FS,A,P,extend,MIME,Content) {
+define(["FS2","assert","PathUtil","extend","Content"],
+        function (FS,A,P,extend,Content) {
     var available=(typeof process=="object"/* && process.__node_webkit*/);
     if (!available) {
         return function () {
@@ -36,11 +36,6 @@ define(["FS2","assert","PathUtil","extend","MIMETypes","Content"],
         return a;
     };
 
-    /*Pro.isText=function (path) {
-        var e=P.ext(path);
-        var m=MIME[e];
-        return P.startsWith( m, "text");
-    };*/
     FS.addFSType("NativeFS",function (path, options) {
             return new NativeFS(options.r);
     });
@@ -162,7 +157,7 @@ define(["FS2","assert","PathUtil","extend","MIMETypes","Content"],
                 return fs.unlinkSync(np);
             }
         },
-        // mv: is Difficult, should check dst.fs==src.fs 
+        // mv: is Difficult, should check dst.fs==src.fs
         //     and both have not subFileSystems
         exists: function (path, options) {
             var np=this.toNativePath(path);

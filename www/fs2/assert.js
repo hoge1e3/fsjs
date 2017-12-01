@@ -138,7 +138,7 @@ define([],function () {
         try {
             return top.assert.apply(top,arguments);
         } catch(e) {
-            throw new Error(e.message);
+            throw new Error(e.stack);
         }
     };
     ["setMode","isDefensive","is","isset","ne","eq","ensureError"].forEach(function (m) {

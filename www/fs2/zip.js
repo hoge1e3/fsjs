@@ -1,5 +1,5 @@
-define(["SFile","jszip","FileSaver.min","Util","MIMETypes","DeferredUtil"],
-function (SFile,JSZip,fsv,Util,M,DU) {
+define(["SFile","jszip","FileSaver.min","Util","DeferredUtil"],
+function (SFile,JSZip,fsv,Util,DU) {
     var zip={};
     zip.zip=function (dir,dstZip,options) {
         if (!SFile.is(dstZip)) options=dstZip;
