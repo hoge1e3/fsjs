@@ -49,7 +49,7 @@ define([], function () {
             }*/
         },
         throwNowIfRejected: function (p) {
-            // If Promise p has already rejected, throws the rejeceted reason immediately. 
+            // If Promise p has already rejected, throws the rejeceted reason immediately.
             var state;
             var err;
             var res=p.then(function (r) {
