@@ -1,5 +1,5 @@
 // This is kowareta! because r.js does not generate module name:
-//   define("FSLib",[], function () { ... 
+//   define("FSLib",[], function () { ...
 //(function (global) {
 //var useGlobal=(typeof global.define!="function");
 //var define=(useGlobal ? define=function(_,f){f();} : global.define);
@@ -19,7 +19,7 @@ define([],function () {
     			var res=func(R.doLoad,module,module.exports);
     			return res || module.exports;
     		};
-		} else { 
+		} else {
     		R.setReqs( m, reqs);
     		m.func=function () {
     			return func.apply(this, R.getObjs(reqs));
@@ -82,12 +82,12 @@ define([],function () {
 	    var str=f+"";
 	    var res=[];
 	    str.replace(/require\s*\(\s*["']([^"']+)["']\s*\)/g,function (m,a) {
-	       res.push(a); 
+	       res.push(a);
 	    });
 	    return res;
 	};
 	R.modules={};
-	requireSimulator=R;
+	//requireSimulator=R;
 //----------
 define('extend',[],function (){
    return function extend(d,s) {
@@ -235,7 +235,7 @@ define('assert',[],function () {
         try {
             return top.assert.apply(top,arguments);
         } catch(e) {
-            throw new Error(e.message);
+            throw new Error(e.stack);
         }
     };
     ["setMode","isDefensive","is","isset","ne","eq","ensureError"].forEach(function (m) {
@@ -948,7 +948,7 @@ function (extend, P, M,assert,DU){
         },
         getContentType: function (path, options) {
             var e=(P.ext(path)+"").toLowerCase();
-            return M[e] || (options||{}).def || "text/plain";
+            return M[e] || (options||{}).def || "application/octet-stream";
         },
         getBlob: function (path, options) {
             var c=this.getContent(path);
@@ -1470,8 +1470,8 @@ define('Content',["assert","Util"],function (assert,Util) {
     return Content;
 });
 
-define('NativeFS',["FS2","assert","PathUtil","extend","MIMETypes","Content"],
-        function (FS,A,P,extend,MIME,Content) {
+define('NativeFS',["FS2","assert","PathUtil","extend","Content"],
+        function (FS,A,P,extend,Content) {
     var available=(typeof process=="object"/* && process.__node_webkit*/);
     if (!available) {
         return function () {
@@ -1508,11 +1508,6 @@ define('NativeFS',["FS2","assert","PathUtil","extend","MIMETypes","Content"],
         return a;
     };
 
-    /*Pro.isText=function (path) {
-        var e=P.ext(path);
-        var m=MIME[e];
-        return P.startsWith( m, "text");
-    };*/
     FS.addFSType("NativeFS",function (path, options) {
             return new NativeFS(options.r);
     });
@@ -1634,7 +1629,7 @@ define('NativeFS',["FS2","assert","PathUtil","extend","MIMETypes","Content"],
                 return fs.unlinkSync(np);
             }
         },
-        // mv: is Difficult, should check dst.fs==src.fs 
+        // mv: is Difficult, should check dst.fs==src.fs
         //     and both have not subFileSystems
         exists: function (path, options) {
             var np=this.toNativePath(path);
@@ -1664,6 +1659,7 @@ define('NativeFS',["FS2","assert","PathUtil","extend","MIMETypes","Content"],
     });
     return NativeFS;
 });
+
 define('LSFS',["FS2","PathUtil","extend","assert","Util","Content"],
         function(FS,P,extend,assert,Util,Content) {
     var LSFS = function(storage,options) {
@@ -14339,8 +14335,8 @@ module.exports = ZStream;
 
 },{}]},{},[10])(10)
 });
-define('zip',["SFile","jszip","FileSaver.min","Util","MIMETypes","DeferredUtil"],
-function (SFile,JSZip,fsv,Util,M,DU) {
+define('zip',["SFile","jszip","FileSaver.min","Util","DeferredUtil"],
+function (SFile,JSZip,fsv,Util,DU) {
     var zip={};
     zip.zip=function (dir,dstZip,options) {
         if (!SFile.is(dstZip)) options=dstZip;

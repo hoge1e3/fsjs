@@ -213,21 +213,26 @@ SFile.prototype={
         if (this.isDir()) {
             throw new Error("Cannot write to directory: "+this.path());
         }
-        if (this.isText()) {
-            // if use fs.setContentAsync, the error should be handled by .fail
-            // setText will throw error immediately
-            return DU.resolve(this.act.fs.setContent(this.act.path, Content.plainText(t)));
-        } else {
+        var ct=this.contentType({def:null});
+        //if (this.isText()) {
+        if (ct!==null && !ct.match(/^text/) && Content.looksLikeDataURL(t)) {
+            // bad knowhow: if this is a binary file apparently, convert to URL
+            return DU.throwNowIfRejected(this.setContent(Content.url(t)));
             return DU.resolve(this.act.fs.setContent(this.act.path, Content.url(t)));
+        } else {
+            // if use fs.setContentAsync, the error should be handled by .fail
+            // setText should throw error immediately (Why? maybe old style of text("foo") did it so...)
+            return DU.throwNowIfRejected(this.setContent(Content.plainText(t)));
+            return DU.resolve(this.act.fs.setContent(this.act.path, Content.plainText(t)));
         }
     },
     appendText:function (t) {
         A.is(t,String);
-        if (this.isText()) {
-            return this.act.fs.appendContent(this.act.path, Content.plainText(t));
-        } else {
+        //if (this.isText()) {
+        return this.act.fs.appendContent(this.act.path, Content.plainText(t));
+        /*} else {
             throw new Error("append only for text file");
-        }
+        }*/
     },
     getContent: function (f) {
         if (typeof f=="function") {
@@ -245,25 +250,44 @@ SFile.prototype={
     getText:function (f) {
     	if (typeof f==="function") {
     		var t=this;
-    	    return this.getContent(function (c) {
-    	    	if (t.isText()) {
-	    	    	return c.toPlainText();
-	    	    } else {
-	    	    	return c.toURL();
-	    	    }
-    	    }).then(f);
+    	    return this.getContent(forceText).then(f);
     	}
-        if (this.isText()) {
+        return forceText(this.act.fs.getContent(this.act.path));
+        /*if (this.isText()) {
             return this.act.fs.getContent(this.act.path).toPlainText();
         } else {
             return this.act.fs.getContent(this.act.path).toURL();
+        }*/
+        function forceText(c) {
+	    	//if (t.isText()) {
+            try {
+                return c.toPlainText();
+            } catch(e) {
+    	    	return c.toURL();
+    	    }
         }
+    },
+    getDataURL: function (f) {
+        if (typeof f==="function") {
+            return this.getContent(function (c) {
+                return c.toURL();
+            });
+        }
+        return this.getContent().toURL();
+    },
+    setDataURL: function (u) {
+        return this.setContent(Content.url(u));
+    },
+    dataURL:function (d) {
+        if (typeof d==="string") return this.setDataURL(d);
+        if (typeof d==="function") return this.getDataURL(d);
+        return this.getDataURL();
     },
     isText: function () {
         return this.act.fs.isText(this.act.path);
     },
-    contentType: function () {
-        return this.act.fs.getContentType(this.act.path);
+    contentType: function (options) {
+        return this.act.fs.getContentType(this.act.path,options);
     },
     bytes: function (b) {
         if (Content.isBuffer(b)) return this.setBytes(b);

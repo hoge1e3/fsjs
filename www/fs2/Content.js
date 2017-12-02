@@ -46,6 +46,9 @@ define(["assert","Util"],function (assert,Util) {
         b.contentType=contentType;
         return b;
     };
+    Content.looksLikeDataURL=function (text) {
+        return text.match(/^data:/);
+    };
     //------- methods
     var p=Content.prototype;
     p.toBin = function (binType) {
@@ -99,7 +102,7 @@ define(["assert","Util"],function (assert,Util) {
         throw new Error("No data");
     };
     p.toPlainText=function () {
-        if (this.plain!=null) {
+        if (this.hasPlainText()) {
             return this.plain;
         } else {
             if (this.url && !this.hasBin() ) {
@@ -247,12 +250,12 @@ define(["assert","Util"],function (assert,Util) {
         for (var i=0 ; i<bytes.length ; i++) {
              e.push("%"+("0"+bytes[i].toString(16)).slice(-2));
         }
-        try {
+        //try {
             return decodeURIComponent(e.join(""));
-        } catch (er) {
+        /*} catch (er) {
             console.log(e.join(""));
             throw er;
-        }
+        }*/
     };
     Content.str2utf8bytes=function (str, binType) {
         var e=encodeURIComponent(str);

@@ -181,6 +181,37 @@ try{
             if (e!=="ERAA") alert(e);
             console.log("DU.all rej",e);
         });
+        assert.ensureError(function () {
+            DU.throwNowIfRejected(
+                DU.resolve(0).then(function (r) {
+                    alert(r.a.b);
+                })
+            );
+        });
+        DU.throwNowIfRejected(
+            DU.timeout(100).then(function (r) {
+                alert(r.a.b);
+            })
+        ).then(
+            function () {alert("NO!");},
+            function (r) {console.log("DU.TNIR",(r+"").replace(/\n.*/,""));}
+        );
+        DU.throwNowIfRejected(
+            DU.timeout(100).then(function (r) {
+                return "OK";
+            })
+        ).then(
+            function (r) {console.log("DU.TNIR",r);},
+            function (r) {alert("NO! 2");}
+        );
+        DU.throwNowIfRejected(
+            DU.resolve(100).then(function (r) {
+                return "OK"+r;
+            })
+        ).then(
+            function (r) {console.log("DU.TNIR",r);},
+            function (r) {alert("NO! 3");}
+        );
         setTimeout(function () {location.reload();},10000);
     } else {
         try {
@@ -244,6 +275,11 @@ try{
        // plain->plain(.txt) / url(bin->URL)->url(URL->bin) (.bin)
        var t=f.text();
        tmp.text(t);
+       checkSame(f,tmp);
+
+       // url(bin->URL)->url(URL->bin) 
+       var t=f.dataURL();
+       tmp.dataURL(t);
        checkSame(f,tmp);
 
        // bin->bin

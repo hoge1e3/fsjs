@@ -7,6 +7,8 @@ define([], function () {
       ".ico":"image/icon",
       ".mp3":"audio/mp3",
       ".ogg":"audio/ogg",
+      ".midi":"audio/midi",
+      ".mid":"audio/midi",
       ".txt":"text/plain",
       ".html":"text/html",
       ".htm":"text/html",
@@ -36,6 +38,8 @@ define([], function () {
       '.ppsx':'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
       '.ppsm':'application/vnd.ms-powerpoint.slideshow.macroEnabled.12',
       '.ppam':'application/vnd.ms-powerpoint.addin.macroEnabled.12',
-      ".tonyu":"text/tonyu"
+      ".tonyu":"text/tonyu",
+      ".c":"text/c",
+      ".dtl":"text/dolittle"
    };
 });

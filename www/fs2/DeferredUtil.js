@@ -48,6 +48,27 @@ define([], function () {
                 return $.when(p);
             }*/
         },
+        throwNowIfRejected: function (p) {
+            // If Promise p has already rejected, throws the rejeceted reason immediately. 
+            var state;
+            var err;
+            var res=p.then(function (r) {
+                if (!state) {
+                    state="resolved";
+                }
+                return r;
+            },function (e) {
+                if (!state) {
+                    state="rejected";
+                    err=e;
+                } else {
+                    return DU.reject(e);
+                }
+            });
+            if (!state) state="notyet";
+            if (state==="rejected") throw err;
+            return res;
+        },
         assertResolved: function (p) {
             var res,resolved;
             p.then(function (r) {

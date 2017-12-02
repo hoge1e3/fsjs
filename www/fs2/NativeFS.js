@@ -63,11 +63,11 @@ define(["FS2","assert","PathUtil","extend","Content"],
             A.is(path,P.Absolute);
             var np=this.toNativePath(path);
             this.assertExist(path);
-            if (this.isText(path)) {
+            /*if (this.isText(path)) {
                 return Content.plainText( fs.readFileSync(np, {encoding:"utf8"}) );
-            } else {
+            } else {*/
                 return Content.bin( fs.readFileSync(np) , this.getContentType(path));
-            }
+            //}
         },
         setContent: function (path,content) {
             A.is(arguments,[P.Absolute,Content]);

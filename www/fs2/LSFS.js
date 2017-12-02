@@ -155,18 +155,24 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
             assert.is(arguments,[Absolute]);
             this.assertExist(path); // Do not use this??( because it does not follow symlinks)
             var c;
-            if (this.isText(path)) {
-                c=Content.plainText(this.getItem(path));
+            var cs=this.getItem(path);
+            if (Content.looksLikeDataURL(cs)) {
+                c=Content.url(cs);
             } else {
-                c=Content.url(this.getItem(path));
+                c=Content.plainText(cs);
             }
             return c;
         },
         setContent: function(path, content, options) {
             assert.is(arguments,[Absolute,Content]);
             this.assertWriteable(path);
-            if (this.isText(path)) {
-                this.setItem(path, content.toPlainText());
+            var t=null;
+            if (content.hasPlainText()) {
+                t=content.toPlainText();
+                if (Content.looksLikeDataURL(t)) t=null;
+            }
+            if (t!=null) {
+                this.setItem(path, t);
             } else {
                 this.setItem(path, content.toURL());
             }
