@@ -1,4 +1,9 @@
 define([], function () {
+    var root=(
+        typeof window!=="undefined" ? window :
+        typeof self!=="undefined" ? self :
+        typeof global!=="undefined" ? global : null
+    );
     //  promise.then(S,F)  and promise.then(S).fail(F) is not same!
     //  ->  when fail on S,  F is executed?
     var DU;
@@ -243,9 +248,9 @@ define([], function () {
             return DU.callbackToPromise(function (s) {$(s);});
         },
         requirejs:function (modules) {
-            if (!window.requirejs) throw new Error("requirejs is not loaded");
+            if (!root.requirejs) throw new Error("requirejs is not loaded");
             return DU.callbackToPromise(function (s) {
-                window.requirejs(modules,s);
+                root.requirejs(modules,s);
             });
         }
     };
@@ -254,10 +259,10 @@ define([], function () {
     DU.promise=DU.callbackToPromise=DU.funcPromise;
     DU.when1=DU.resolve;
     DU.config={};
-    if (window.$ && window.$.Deferred) {
+    if (root.$ && root.$.Deferred) {
         DU.config.useJQ=true;
     }
-    DU.external={Promise:window.Promise};
-    if (!window.DeferredUtil) window.DeferredUtil=DU;
+    DU.external={Promise:root.Promise};
+    if (!root.DeferredUtil) root.DeferredUtil=DU;
     return DU;
 });

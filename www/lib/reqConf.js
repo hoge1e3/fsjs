@@ -12,7 +12,15 @@ var reqConf={
             "wget":"../fstools/wget",
             "DragDrop":"../fstools/DragDrop",
             "source-map":"../lib/source-map",
+	        worker: "../worker/workerLoader",//ADD
+       		workerProxy: "../worker/proxy",//ADD
+            WorkerRevProxy: "../worker/WorkerRevProxy", //ADD
             "foo":"bar"
+        },
+        worker: {//ADD all
+            //debug: true,
+            stack: true,
+            path: "webworker.js"// relative from html. Not influenced by baseUrl and needs .js
         },
         "baseUrl": "fs2"
 };
