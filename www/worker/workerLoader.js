@@ -1,6 +1,6 @@
 //https://github.com/spatools/requirejs-worker
 // It runs on browser context, despite the name 'worker'.
-define(["WorkerRevProxy"],function (WRP) {
+define(["WorkerRevProxy","DeferredUtil"],function (WRP,DU) {
     if (typeof window === "undefined") {
         return { load: function (name, req, onLoad) { onLoad(); } };
     }
@@ -50,7 +50,7 @@ define(["WorkerRevProxy"],function (WRP) {
         }
 
         if (WORKER) {
-            return Promise.resolve(WORKER);
+            return DU.resolve(WORKER);
         }
 
         log("Launching worker from url:", WORKER_CONFIG.path);
@@ -58,7 +58,7 @@ define(["WorkerRevProxy"],function (WRP) {
         WORKER = new Worker(WORKER_CONFIG.path);
         WORKER.onmessage = onWorkerMessage;
         WRP.manager.initWorkerEvent(WORKER);
-        return (WORKER_PROMISE = new Promise(function (res) { WORKER_RESOLVE = res; }));
+        return (WORKER_PROMISE = DU.promise(function (res) { WORKER_RESOLVE = res; }));
     }
 
     /*
@@ -110,7 +110,7 @@ define(["WorkerRevProxy"],function (WRP) {
     }
 
     function ensureProxyPromise(name) {
-        return new Promise(function (resolve) {
+        return DU.promise(function (resolve) {
             ensureProxy(name, resolve);
         });
     }
@@ -134,7 +134,7 @@ define(["WorkerRevProxy"],function (WRP) {
                 cid = generateCid(),
                 operation = operations[cid] = {};
 
-            operation.promise = new Promise(function (res, rej) {
+            operation.promise = DU.promise(function (res, rej) {
                 operation.resolve = res;
                 operation.reject = rej;
             });
@@ -142,6 +142,7 @@ define(["WorkerRevProxy"],function (WRP) {
             return ensureProxyPromise(name)
                 .then(ensureWorker)
                 .then(function (worker) {
+                    //console.log("WK",worker);
                     log("Send method request '" + name + "." + method + " (cid: " + cid + ")' to Worker");
                     args=args.map(function (v) {
                         if (v instanceof WorkerRevProxy) {

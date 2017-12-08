@@ -1,6 +1,7 @@
 define(["Klass","DeferredUtil"], function (Klass,DU) {
 	if (typeof importScripts!=="undefined") {
 		// worker side
+		var queue={};
 		WorkerRevProxy = Klass.define({
 			$: function (fragment) {
 				/*fragment::{
@@ -10,13 +11,17 @@ define(["Klass","DeferredUtil"], function (Klass,DU) {
 				}*/
 				this.fragment=fragment;
 				var methodNames=fragment.methodNames;
-				var queue={};
 				var t=this;
 				methodNames.forEach(function (k) {
 					t[k]=(function () {
 						var a=Array.prototype.slice.call(arguments);
 						return DU.promise(function (succ,fail) {
 							var id=Math.random()+"";
+							queue[id]=function (type,result) {
+								if (type=="succ") succ(result);
+								if (type=="fail") fail(result);
+							};
+							//postMessage({DEBUG:["addq",id,k,fragment]});
 							self.postMessage({
 								isRequestToRevProxy:true,
 								proxyID:fragment.proxyID,
@@ -29,27 +34,24 @@ define(["Klass","DeferredUtil"], function (Klass,DU) {
 									return v;
 								})
 							});
-							queue[id]=function (type,result) {
-								if (type=="succ") succ(result);
-								if (type=="fail") fail(result);
-							};
 						});
 					});
 				});
-				self.addEventListener("message",function (e) {
-					if (e.data.isResponseFromRevProxy) {
-						/*
-						{
-							isResponseFromRevProxy:true,
-							id: e.data.id,
-							type: "succ"||"fail",
-							result: res
-						}
-						*/
-						queue[e.data.id](e.data.type,e.data.result);
-						delete queue[e.data.id];
-					}
-				});
+			}
+		});
+		self.addEventListener("message",function (e) {
+			if (e.data.isResponseFromRevProxy) {
+				/*
+				{
+					isResponseFromRevProxy:true,
+					id: e.data.id,
+					type: "succ"||"fail",
+					result: res
+				}
+				*/
+				//postMessage({DEBUG:["useq",e.data.id,e.data]});
+				queue[e.data.id](e.data.type,e.data.result);
+				delete queue[e.data.id];
 			}
 		});
 	} else {
@@ -60,6 +62,7 @@ define(["Klass","DeferredUtil"], function (Klass,DU) {
 				WorkerRevProxy.manager.instances[this.id]=this;
 				this.methodNames=[];
 				this.context=context;
+				this.target=target;
 				var methodDefs=this.methodDefs={};
 				for (var k in target) {
 					var v=target[k];
@@ -78,6 +81,7 @@ define(["Klass","DeferredUtil"], function (Klass,DU) {
 				var proxy=this;
 				var methodDefs=proxy.methodDefs;
 				var target=proxy.target;
+				//console.log("Procmsg", this, e.data.method);
 				DU.resolve().then(function (){
 					return methodDefs[e.data.method].apply(
 						target,
@@ -93,13 +97,16 @@ define(["Klass","DeferredUtil"], function (Klass,DU) {
 						type: "succ",
 						result: res
 					});
-				},function (e) {
+				},function (err) {
 					worker.postMessage({
 						isResponseFromRevProxy:true,
 						id: e.data.id,
 						type: "fail",
-						result: e
+						result: err+""
 					});
+					return err;
+				}).then(function () {},function (e) {
+					console.error("proc msg fail",e);
 				});
 			},
 			wrap: function (o) {
@@ -141,7 +148,12 @@ define(["Klass","DeferredUtil"], function (Klass,DU) {
 						arguments: arguments
 					}*/
 					if (!e.data.isRequestToRevProxy) return;
+					//console.log("recv req",e.data);
 					var proxy=WorkerRevProxy.manager.instances[e.data.proxyID];
+					if (!proxy) {
+						console.log("recv req err",e.data,WorkerRevProxy.manager.instances);
+						throw new Error("Proxy id="+e.data.proxyID+" not found");
+					}
 					proxy.processMessage(worker,e);
 				});
 			}

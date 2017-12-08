@@ -15,7 +15,8 @@ var reqConf={
 	        worker: "../worker/workerLoader",//ADD
        		workerProxy: "../worker/proxy",//ADD
             WorkerRevProxy: "../worker/WorkerRevProxy", //ADD
-            "foo":"bar"
+            testworker: "../test/testworker",
+            "foooooo":"bar"
         },
         worker: {//ADD all
             //debug: true,

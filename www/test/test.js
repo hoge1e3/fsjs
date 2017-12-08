@@ -1,5 +1,5 @@
-requirejs(["WebFS","LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS","Content","DeferredUtil"],
-function (WebFS,LSFS, romk,assert,P,SFile, NativeFS,RootFS,Content,DU) {
+requirejs(["WebFS","LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS","Content","DeferredUtil","WorkerRevProxy","FSRevProxy"],
+function (WebFS,LSFS, romk,assert,P,SFile, NativeFS,RootFS,Content,DU,WRP,FSRevProxy) {
 try{
 
     assert.is(arguments,
@@ -212,7 +212,17 @@ try{
             function (r) {console.log("DU.TNIR",r);},
             function (r) {alert("NO! 3");}
         );
-        setTimeout(function () {location.reload();},10000);
+        requirejs(["worker!testworker"],function (tw) {
+            var con=new WRP(console);
+            var fs=new FSRevProxy(rootFS);
+            tw.proc(con,fs,"/").then(function (r) {
+                console.log("testw ok",r);
+                con.dispose();
+            },function (e) {
+                alert("testw err"+e);
+            });
+        });
+        //setTimeout(function () {location.reload();},10000);
     } else {
         try {
             console.log("Test pass",2);
@@ -277,7 +287,7 @@ try{
        tmp.text(t);
        checkSame(f,tmp);
 
-       // url(bin->URL)->url(URL->bin) 
+       // url(bin->URL)->url(URL->bin)
        var t=f.dataURL();
        tmp.dataURL(t);
        checkSame(f,tmp);
