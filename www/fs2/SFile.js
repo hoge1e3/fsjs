@@ -331,7 +331,7 @@ SFile.prototype={
             dstIsDir=false;
         }
         if (srcIsDir && !dstIsDir) {
-           this.err("Cannot move dir to file");
+           this.err("Cannot move dir "+src.path()+" to file "+dst.path());
         } else if (!srcIsDir && !dstIsDir) {
             if (options.echo) options.echo(src+" -> "+dst);
             var res=this.act.fs.cp(this.act.path, dst.getResolvedLinkPath(),options);
@@ -491,6 +491,11 @@ SFile.prototype={
     download: function () {
         if (this.isDir()) throw new Error(this+": Download dir is not support yet. Use 'zip' instead.");
         saveAs(this.getBlob(),this.name());;
+    },
+    err: function () {
+        var a=Array.prototype.slice.call(arguments);
+        console.log.apply(console,a);
+        throw new Error(a.join(""));
     }
 };
 Object.defineProperty(SFile.prototype,"act",{

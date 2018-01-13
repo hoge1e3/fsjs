@@ -15,6 +15,7 @@ define(["FS"],function (FS) {
     };
     DragDrop.accept=function (dom, fdst,options) {
         options=options||{};
+        options.draggingClass=options.draggingClass||"dragging";
         dom.on("dragover",over);
         dom.on("dragenter",enter);
         dom.on("dragleave",leave);
@@ -37,7 +38,7 @@ define(["FS"],function (FS) {
         function dropAdd(e) {
             var dst=fdst;
             if (typeof dst==="function") dst=dst();
-            dom.removeClass("dragging");
+            dom.removeClass(options.draggingClass);
             var status={};
             var eo=e.originalEvent;
             e.stopPropagation();
@@ -90,27 +91,27 @@ define(["FS"],function (FS) {
             console.log("enter",eo.target.innerHTML,e);
             entc++;
             /*if (dom[0]===eo.relatedTarget) {
-                dom.addClass("dragging");
+                dom.addClass(options.draggingClass);
             }*/
             //if (eo.target===dom[0]) {
-            dom.addClass("dragging");
+            dom.addClass(options.draggingClass);
             //}
-                //$(eo.target).addClass("dragging");
+                //$(eo.target).addClass(options.draggingClass);
             //e.stopPropagation();
             //e.preventDefault();
         }
         function leave(e) {
             var eo=e.originalEvent;
-            //dom.removeClass("dragging");
+            //dom.removeClass(options.draggingClass);
             console.log("leave",eo.target.innerHTML,e);
             entc--;
             /*if (dom[0]===eo.relatedTarget) {
-                dom.removeClass("dragging");
+                dom.removeClass(options.draggingClass);
             }*/
             //if (eo.target===dom[0]) {
-            if (entc<=0) dom.removeClass("dragging");
+            if (entc<=0) dom.removeClass(options.draggingClass);
             //}
-            //$(eo.target).removeClass("dragging");
+            //$(eo.target).removeClass(options.draggingClass);
             //e.stopPropagation();
             //e.preventDefault();
         }
