@@ -335,22 +335,34 @@ SFile.prototype={
         } else if (!srcIsDir && !dstIsDir) {
             if (options.echo) options.echo(src+" -> "+dst);
             var res=this.act.fs.cp(this.act.path, dst.getResolvedLinkPath(),options);
+            res=DU.resolve(res);
             if (options.a) {
-                dst.setMetaInfo(src.getMetaInfo());
+                return res.then(function () {
+                    return dst.setMetaInfo(src.getMetaInfo());
+                });
             }
-            return DU.resolve(res);
+            return res;
         } else {
             A(srcIsDir && dstIsDir,"Both src and dst should be dir");
             return src.each(function (s) {
-                dst.rel(s.name()).copyFrom(s, options);
+                return dst.rel(s.name()).copyFrom(s, options);
             });
         }
         //file.text(src.text());
         //if (options.a) file.metaInfo(src.metaInfo());
     },
     moveFrom: function (src, options) {
-        return this.copyFrom(src,options).then(function () {
-            return src.rm({recursive:true});
+        var t=this;
+        return t.exists(function (ex) {
+            return t.copyFrom(src,options).then(function () {
+                return src.rm({recursive:true});
+            },function (e) {
+                // rollback
+                if (!ex) return t.exists(function (ex) {
+                    if (ex) return t.rm({recursive:true});
+                }).then(function () {throw e;});
+                throw e;
+            });
         });
     },
     moveTo: function (dst, options) {

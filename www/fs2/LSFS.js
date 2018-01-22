@@ -141,6 +141,62 @@ define(["FS2","PathUtil","extend","assert","Util","Content"],
     LSFS.prototype.fstype=function () {
         return (this.isRAM() ? "ramDisk" : "localStorage" );
     };
+    LSFS.getUsage=function () {
+        var using=0;
+        for (var i in localStorage) {
+            if (typeof localStorage[i]=="string"){
+                using+=localStorage[i].length;
+            }
+        }
+        return using;
+    };
+    LSFS.getCapacity=function () {
+        var seq=0;
+        var str="a";
+        var KEY="___checkls___";
+        var using=0;
+        var lim=Math.pow(2,25);//32MB?
+        try {
+            // make 1KB str
+            for (var i=0; i<10 ;i++) {
+                str+=str;
+            }
+            for (var i in localStorage) {
+                if (i.substring(0,KEY.length)==KEY) delete localStorage[i];
+                else if (typeof localStorage[i]=="string"){
+                    using+=localStorage[i].length;
+                }
+            }
+            var ru=using;
+            while (add()) {
+                if (str.length<lim) {
+                    str+=str;
+                } else break;
+            }
+            while(str.length>1024) {
+                str=str.substring(str.length/2);
+                add();
+            }
+            return {using:ru, max:using};
+        } finally {
+            for (var i=0; i<seq; i++) {
+                 delete localStorage[KEY+i];
+            }
+        }
+        function add() {
+            try {
+                localStorage[KEY+seq]=str;
+                seq++;
+                using+=str.length;
+                //console.log("Added "+str.length, str.length, using);
+                return true;
+            } catch(e) {
+                delete localStorage[KEY+seq];
+                //console.log("Add Fail "+str.length);
+                return false;
+            }
+        }
+    };
 
     // public methods (with resolve fs)
     FS.delegateMethods(LSFS.prototype, {

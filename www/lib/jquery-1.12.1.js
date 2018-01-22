@@ -3400,6 +3400,9 @@ jQuery.extend( {
 					deferred.done( arguments ).fail( arguments );
 					return this;
 				},
+				"finally": function () {//@hoge1e3
+					return this.always.apply(this,arguments);
+				},
 				"catch": function () {//@hoge1e3
 					return this.fail.apply(this,arguments);
 				},

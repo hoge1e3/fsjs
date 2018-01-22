@@ -142,7 +142,41 @@ try{
         testd.rel("test.txt").text(romd.rel("Actor.tonyu").text()+ABCD+CDEF);
         chkCpy(testd.rel("test.txt"));
         testd.rel("test.txt").text(ABCD);
-
+        //--- the big file
+        var cap=LSFS.getCapacity();
+        console.log("usage",cap);
+        var len=cap.max-cap.using+1500;
+        var buf="a";
+        while(buf.length<len) buf+=buf;
+        var bigDir=testd.rel("bigDir/");
+        var bigDir2=bigDir.sibling("bigDir2/");
+        if (bigDir2.exists()) bigDir2.rm({r:1});
+        var bigFile=bigDir.rel("theBigFile.txt");
+        assert.ensureError(function () {
+            console.log("Try to create the BIG ",buf.length,"bytes file");
+            return bigFile.text(buf);
+        });
+        assert(!bigFile.exists(), "BIG file remains...?");
+        buf=buf.substring(0,cap.max-cap.using-1500);
+        buf=buf.substring(0,buf.length/10);
+        for (var i=0;i<6;i++) bigDir.rel("test"+i+".txt").text(buf);
+        bigDir.moveTo(bigDir2).then(
+            function () {alert("You cannot come here(move big)");},
+            function () {
+                console.log("Successfully kowareta!(move big!)");
+                return DU.resolve();
+            }
+        ).then(function () {
+            for (var i=0;i<6;i++) assert(bigDir.rel("test"+i+".txt").exists());
+            assert(!bigDir2.exists(),"Bigdir2 remains");
+            console.log("Bigdir removing");
+            bigDir.removeWithoutTrash({recursive:true});
+            bigDir2.removeWithoutTrash({recursive:true});
+            assert(!bigDir.exists());
+            console.log("Bigdir removed!");
+            return DU.resolve();
+        }).then(DU.NOP,DU.E);
+        //------------------
         if (!nfs) {
             rootFS.mount(
                 location.protocol+"//"+location.host+"/",

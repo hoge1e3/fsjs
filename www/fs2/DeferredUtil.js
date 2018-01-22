@@ -255,6 +255,17 @@ define([], function () {
         }
     };
     DU.NOP=function (r) {return r;};
+    DU.E=function () {
+        console.log("DUE",arguments);
+        DU.errorHandler.apply(DU,arguments);
+    };
+    DU.errorHandler=function (e) {
+        console.error.apply(console,arguments);
+        alert(e);
+    };
+    DU.setE=function (f) {
+        DU.errorHandler=f;
+    };
     DU.begin=DU.try=DU.tr=DU.throwF;
     DU.promise=DU.callbackToPromise=DU.funcPromise;
     DU.when1=DU.resolve;
