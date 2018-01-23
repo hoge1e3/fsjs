@@ -3410,8 +3410,8 @@ jQuery.extend( {
 				},
 				then: function( /* fnDone, fnFail, fnProgress */ ) {
 					var fns = arguments;
-					function throwF(f) {//@hoge1e3
-                        return function (wrapPromise) {
+					function throwF(f,wrapPromise) {//@hoge1e3
+                        return function () {
                             try {
 								var r=f.apply(this,arguments);
                                 if (wrapPromise) return jQuery.when(r);
