@@ -8,7 +8,8 @@ function startsWith(str,prefix) {
     return str.substring(0, prefix.length)===prefix;
 }
 var driveLetter=/^([a-zA-Z]):/;
-var url=/^([a-z]+):\/\/\/?([^\/]+)\//;
+// hyphen on protocol -> chrome-extension://....
+var url=/^([a-z\-]+):\/\/\/?([^\/]+)\//;
 var PathUtil;
 var Path=assert.f(function (s) {
     this.is(s,String);
@@ -66,7 +67,7 @@ PathUtil={
         return endsWith(path,SEP);
     },
     hasBackslashSep:function (path) {
-        return path.indexOf("\\")>=0;   
+        return path.indexOf("\\")>=0;
     },
     fixSep: function (path,to) {
         to=to||"/";
@@ -167,7 +168,7 @@ PathUtil={
         var backslashifyAfter=false;
         var a=Array.prototype.slice.call(arguments).map(function (e) {
             if (PathUtil.hasBackslashSep(e)) {
-                backslashifyAfter=true; 
+                backslashifyAfter=true;
                 return PathUtil.fixSep(e);
             } else {
                 return e;

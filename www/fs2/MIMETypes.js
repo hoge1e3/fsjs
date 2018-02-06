@@ -5,6 +5,7 @@ define([], function () {
       ".jpeg":"image/jpeg",
       ".jpg":"image/jpeg",
       ".ico":"image/icon",
+      ".wav":"audio/x-wav",
       ".mp3":"audio/mp3",
       ".ogg":"audio/ogg",
       ".midi":"audio/midi",
