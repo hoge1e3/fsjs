@@ -1,4 +1,4 @@
-define(["FS2","assert","PathUtil","extend","Content"],
+define(["FSClass","assert","PathUtil","extend","Content"],
         function (FS,A,P,extend,Content) {
     var available=(typeof process=="object"/* && process.__node_webkit*/);
     if (!available) {

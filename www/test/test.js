@@ -1,9 +1,20 @@
-requirejs(["WebFS","LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS","Content","DeferredUtil","WorkerRevProxy","FSRevProxy"],
-function (WebFS,LSFS, romk,assert,P,SFile, NativeFS,RootFS,Content,DU,WRP,FSRevProxy) {
+//requirejs(["WebFS","LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS","Content","DeferredUtil","WorkerRevProxy","FSRevProxy"],
+//function (WebFS,LSFS, romk,assert,P,SFile, NativeFS,RootFS,Content,DU,WRP,FSRevProxy) {
+requirejs(["FS","../test/ROM_k","WorkerRevProxy","FSRevProxy"],
+function (FS,romk,WRP,FSRevProxy) {
 try{
-
+    var assert=FS.assert;
     assert.is(arguments,
-       [Function,Function,LSFS,Function,Object,Function,Function,Function]);
+        [Object,FS.LSFS,Function,Function]);
+//       [Function,Function,LSFS,Function,Object,Function,Function,Function]);
+    var WebFS=assert(FS.WebFS),
+        LSFS=assert(FS.LSFS),
+        P=assert(FS.PathUtil),
+        SFile=assert(FS.SFile),
+        NativeFS=assert(FS.NativeFS),
+        RootFS=assert(FS.RootFS),
+        Content=assert(FS.Content),
+        DU=assert(FS.DeferredUtil);
     var rootFS=window.rfs=new RootFS(new LSFS(localStorage));
     window.onerror=function (e) {
         alert(e);

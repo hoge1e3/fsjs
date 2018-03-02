@@ -1,5 +1,5 @@
-define(["extend","assert","PathUtil","Util","Content","FS2","FileSaver.min","DeferredUtil"],
-function (extend,A,P,Util,Content,FS2,sv,DU) {
+define(["extend","assert","PathUtil","Util","Content","FSClass","FileSaver.min","DeferredUtil"],
+function (extend,A,P,Util,Content,FSClass,sv,DU) {
 
 var SFile=function (rootFS, path) {
     A.is(path, P.Absolute);
@@ -10,7 +10,7 @@ var SFile=function (rootFS, path) {
     /*this.act={};// path/fs after follwed symlink
     this.act.path=this.fs.resolveLink(path);
     this.act.fs=rootFS.resolveFS(this.act.path);
-    A.is(this.act, {fs:FS2, path:P.Absolute});*/
+    A.is(this.act, {fs:FSClass, path:P.Absolute});*/
     if (this.isDir() && !P.isDir(path)) {
         this._path+=P.SEP;
     }
@@ -516,7 +516,7 @@ Object.defineProperty(SFile.prototype,"act",{
         this._act={};// path/fs after follwed symlink
         this._act.path=this.fs.resolveLink(this._path);
         this._act.fs=this.rootFS.resolveFS(this._act.path);
-        A.is(this._act, {fs:FS2, path:P.Absolute});
+        A.is(this._act, {fs:FSClass, path:P.Absolute});
         return this._act;
     }
 });

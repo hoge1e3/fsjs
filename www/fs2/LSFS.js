@@ -1,4 +1,4 @@
-define(["FS2","PathUtil","extend","assert","Util","Content"],
+define(["FSClass","PathUtil","extend","assert","Util","Content"],
         function(FS,P,extend,assert,Util,Content) {
     var LSFS = function(storage,options) {
         assert(storage," new LSFS fail: no storage");

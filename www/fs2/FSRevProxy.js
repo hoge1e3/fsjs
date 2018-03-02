@@ -1,4 +1,4 @@
-define(["WorkerRevProxy","FS2"],function (WRP,FS2) {
+define(["WorkerRevProxy","FSClass"],function (WRP,FSClass) {
     var klass=function (rootFS) {
         this.rootFS=rootFS;
     };
@@ -6,7 +6,7 @@ define(["WorkerRevProxy","FS2"],function (WRP,FS2) {
         return new WRP(new klass(rootFS));
     };
     var p=klass.prototype;
-    Object.keys(FS2.prototype).forEach(function (k) {
+    Object.keys(FSClass.prototype).forEach(function (k) {
         p[k]=function () {
             var a=Array.prototype.slice.call(arguments);
             var path=a[0];

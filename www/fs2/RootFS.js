@@ -1,4 +1,4 @@
-define(["assert","FS2","PathUtil","SFile"], function (assert,FS,P,SFile) {
+define(["assert","FSClass","PathUtil","SFile"], function (assert,FS,P,SFile) {
     var RootFS=function (defaultFS){
         assert.is(defaultFS,FS);
         this.mount(null, defaultFS);

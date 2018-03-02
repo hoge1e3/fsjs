@@ -1,4 +1,4 @@
-define(["FS2","jquery.binarytransport","DeferredUtil","Content","PathUtil"],
+define(["FSClass","jquery.binarytransport","DeferredUtil","Content","PathUtil"],
         function (FS,j,DU,Content,P) {
     // FS.mount(location.protocol+"//"+location.host+"/", "web");
     var WebFS=function (){};
