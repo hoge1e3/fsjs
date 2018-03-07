@@ -1,10 +1,17 @@
-define(["SFile","jszip","FileSaver.min","Util","DeferredUtil"],
-function (SFile,JSZip,fsv,Util,DU) {
+define(["SFile",/*"jszip",*/"FileSaver.min","Util","DeferredUtil"],
+function (SFile,/*JSZip,*/fsv,Util,DU) {
     var zip={};
+    zip.setJSZip=function (JSZip) {
+        zip.JSZip=JSZip;
+        if (!DU.external.Promise) {
+            DU.external.Promise=JSZip.external.Promise;
+        }
+    };
+    if (typeof JSZip!=="undefined") zip.setJSZip(JSZip);
     zip.zip=function (dir,dstZip,options) {
         if (!SFile.is(dstZip)) options=dstZip;
         options=options||{};
-        var zip = new JSZip();
+        var jszip = new zip.JSZip();
         function loop(dst, dir) {
             return dir.each(function (f) {
                 if (f.isDir()) {
@@ -17,8 +24,8 @@ function (SFile,JSZip,fsv,Util,DU) {
                 }
             });
         }
-        return loop(zip, dir).then(function () {
-            return DU.resolve(zip.generateAsync({
+        return loop(jszip, dir).then(function () {
+            return DU.resolve(jszip.generateAsync({
                 type:"arraybuffer",
                 compression:"DEFLATE"
             }));
@@ -54,7 +61,7 @@ function (SFile,JSZip,fsv,Util,DU) {
                 }
             };
         }
-        var zip=new JSZip();
+        var zip=new zip.JSZip();
         return DU.resolve(zip.loadAsync(arrayBuf)).then(function () {
             return DU.each(zip.files,function (key,zipEntry) {
                 //var zipEntry=zip.files[i];
@@ -85,6 +92,5 @@ function (SFile,JSZip,fsv,Util,DU) {
             return status;
         });
     };
-    zip.JSZip=JSZip;
     return zip;
 });

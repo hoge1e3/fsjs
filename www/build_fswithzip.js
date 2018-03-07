@@ -1,6 +1,6 @@
 ({
-    name: 'FSNoZip',
-    out: 'gen/FSNoZip.js',
+    name: 'FSWithZip',
+    out: 'gen/FSWithZip.js',
     optimize:"none",
     //namespace: "fsjs",
     baseUrl: "./fs2",

@@ -163,7 +163,7 @@ define([], function () {
                 d.reject(e);
                 return d.promise();
             } else {
-                return new JQ.external.Promise(function (s,rej) {
+                return new DU.external.Promise(function (s,rej) {
                     rej(e);
                 });
             }
@@ -176,7 +176,7 @@ define([], function () {
                 }, 0);
                 return d.promise();
             } else {
-                return new JQ.external.Promise(function (s,rej) {
+                return new DU.external.Promise(function (s,rej) {
                     rej(e);
                 });
             }
