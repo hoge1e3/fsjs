@@ -1,5 +1,5 @@
 importScripts(
-    // "https://rawgit.com/stefanpenner/es6-promise/master/dist/es6-promise.auto.js", // Uncomment for IE10
+    "lib/promise.js", // Uncomment for IE10/11
     "lib/require.js","lib/reqConf.js"
 );
 requirejs.config(reqConf);

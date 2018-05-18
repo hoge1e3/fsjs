@@ -348,7 +348,7 @@ SFile.prototype={
                 var r;
                 var dstf=dst.rel(s.name());
                 if (options.progress) {
-                    r=options.progress(dstf,{src:s,dst:dstf}));
+                    r=options.progress(dstf,{src:s,dst:dstf});
                 }
                 return DU.resolve(r).then(function () {
                     return dstf.copyFrom(s, options);

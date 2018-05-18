@@ -1,5 +1,5 @@
 //https://github.com/spatools/requirejs-worker
-// It runs on browser context, despite the name 'worker'.
+// It runs on browser context, despite the name 'worker'. Why? ->  require(["worker!a"])
 define(["WorkerRevProxy","DeferredUtil"],function (WRP,DU) {
     if (typeof window === "undefined") {
         return { load: function (name, req, onLoad) { onLoad(); } };
