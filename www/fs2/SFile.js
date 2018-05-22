@@ -507,6 +507,17 @@ SFile.prototype={
     getBlob: function () {
         return new Blob([this.bytes()],{type:this.contentType()});
     },
+    setBlob: function (blob) {
+        var t=this;
+        return DU.promise(function (succ,err) {
+            var reader = new FileReader();
+            reader.addEventListener("loadend", function() {
+                // reader.result contains the contents of blob as a typed array
+                DU.resolve(t.setBytes(reader.result)).then(succ);
+            });
+            reader.readAsArrayBuffer(blob);
+        });
+    },
     download: function () {
         if (this.isDir()) throw new Error(this+": Download dir is not support yet. Use 'zip' instead.");
         saveAs(this.getBlob(),this.name());;

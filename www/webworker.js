@@ -1,5 +1,5 @@
 importScripts(
-    "lib/promise.js", // Uncomment for IE10/11
+    "worker/promise.js", // Uncomment for IE10/11
     "lib/require.js","lib/reqConf.js"
 );
 requirejs.config(reqConf);

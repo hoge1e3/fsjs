@@ -271,6 +271,18 @@ try{
                 alert("testw err"+e);
             });
         });
+        // blob->blob
+        var f=testd.rel("hoge.txt");
+        f.text("hogefuga");
+        var tmp=testd.rel("fuga.txt");
+        var b=f.getBlob();
+        console.log("BLOB reading...",f.name(),tmp.name());
+        tmp.setBlob(b).then(function () {
+            checkSame(f,tmp);
+            console.log("BLOB read done!",f.name(),tmp.name());
+            tmp.rm();
+            f.rm();
+        });
         //setTimeout(function () {location.reload();},10000);
     } else {
         try {
@@ -327,24 +339,31 @@ try{
        var tmp=f.up().rel("tmp_"+f.name());
        f.copyTo(tmp);
        checkSame(f,tmp);
+       tmp.text("DUMMY");
+
        var c=f.getContent();
        tmp.setContent(c);
        checkSame(f,tmp);
+       tmp.text("DUMMY");
 
        // plain->plain(.txt) / url(bin->URL)->url(URL->bin) (.bin)
        var t=f.text();
        tmp.text(t);
        checkSame(f,tmp);
+       tmp.text("DUMMY");
 
        // url(bin->URL)->url(URL->bin)
        var t=f.dataURL();
        tmp.dataURL(t);
        checkSame(f,tmp);
+       tmp.text("DUMMY");
 
        // bin->bin
        var b=f.getBytes();
        tmp.setBytes(b);
        checkSame(f,tmp);
+       tmp.text("DUMMY");
+
 
         if (f.isText()) {
             // plain->bin(lsfs) , bin->plain(natfs)
@@ -353,13 +372,16 @@ try{
            t=c.toPlainText();
            tmp.setText(t);
            checkSame(f,tmp);
+           tmp.text("DUMMY");
         }
+
+
 
 
 	   tmp.removeWithoutTrash();
     }
     function checkSame(a,b) {
-       console.log("check same",a,b,a.text().length);
+       console.log("check same",a.name(),b.name(),a.text().length);
        assert(a.text()==b.text(),"text is not match: "+a+","+b);
        var a1=a.getBytes({binType:ArrayBuffer});
        var b1=b.getBytes({binType:ArrayBuffer});

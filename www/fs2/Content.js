@@ -49,6 +49,7 @@ define(["assert","Util"],function (assert,Util) {
     Content.looksLikeDataURL=function (text) {
         return text.match(/^data:/);
     };
+    // why blob is not here... because blob content requires FileReader (cannot read instantly!)
     //------- methods
     var p=Content.prototype;
     p.toBin = function (binType) {
