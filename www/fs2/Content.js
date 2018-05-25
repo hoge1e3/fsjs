@@ -123,6 +123,12 @@ define(["assert","Util"],function (assert,Util) {
     p.hasBin=function (){return this.nodeBuffer || this.arrayBuffer;};
     p.hasNodeBuffer= function () {return this.nodeBuffer;};
     p.hasArrayBuffer= function () {return this.arrayBuffer;};
+    p.toBlob=function () {
+        return new Blob([this.toBin(ArrayBuffer)],{type:this.contentType});
+    };
+    p.download=function (name) {
+        saveAs(this.toBlob(),name);
+    };
     //--------Util funcs
     // From http://hakuhin.jp/js/base64.html#BASE64_DECODE_ARRAY_BUFFER
     Content.Base64_To_ArrayBuffer=function (base64,binType){
