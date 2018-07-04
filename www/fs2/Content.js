@@ -1,4 +1,4 @@
-define(["assert","Util"],function (assert,Util) {
+define(["assert","Util","FileSaver.min"],function (assert,Util,saveAs) {
     var Content=function () {};
     var extend=Util.extend;
     // ------ constructor
@@ -49,6 +49,7 @@ define(["assert","Util"],function (assert,Util) {
     Content.looksLikeDataURL=function (text) {
         return text.match(/^data:/);
     };
+    Content.download=saveAs;
     // why blob is not here... because blob content requires FileReader (cannot read instantly!)
     //------- methods
     var p=Content.prototype;
@@ -127,7 +128,7 @@ define(["assert","Util"],function (assert,Util) {
         return new Blob([this.toBin(ArrayBuffer)],{type:this.contentType});
     };
     p.download=function (name) {
-        saveAs(this.toBlob(),name);
+        Content.download(this.toBlob(),name);
     };
     //--------Util funcs
     // From http://hakuhin.jp/js/base64.html#BASE64_DECODE_ARRAY_BUFFER

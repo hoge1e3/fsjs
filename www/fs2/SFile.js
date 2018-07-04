@@ -1,5 +1,5 @@
 define(["extend","assert","PathUtil","Util","Content","FSClass","FileSaver.min","DeferredUtil"],
-function (extend,A,P,Util,Content,FSClass,sv,DU) {
+function (extend,A,P,Util,Content,FSClass,saveAs,DU) {
 
 var SFile=function (rootFS, path) {
     A.is(path, P.Absolute);
