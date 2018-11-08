@@ -47,8 +47,32 @@ define(["FSClass","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile",
         if (!fs) {
             if (typeof process=="object") {
                 fs=new NativeFS();
-            } else {
+            } else if (typeof localStorage==="object") {
                 fs=new LSFS(localStorage);
+            } else if (typeof importScripts==="function") {
+                // Worker
+                self.addEventListener("message", function (e) {
+                    var data=e.data;
+                    if (typeof data==="string") {
+                        data=JSON.parse(data);
+                    }
+                    switch(data.type) {
+                    case "upload":
+                        FS.get(data.base).importFromObject(data.data);
+                        break;
+                    case "observe":
+                        rootFS.observe(data.path, function (path,meta) {
+                            self.postMessage(JSON.stringify({
+                                type: "changed",
+                                path: path,
+                                content: FS.get(path).text(),
+                                meta: meta
+                            }));
+                        });
+                        break;
+                    }
+                });
+                fs=LSFS.ramDisk();
             }
         }
         rootFS=new RootFS(fs);
