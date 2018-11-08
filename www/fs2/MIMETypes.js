@@ -10,6 +10,7 @@ define([], function () {
       ".ogg":"audio/ogg",
       ".midi":"audio/midi",
       ".mid":"audio/midi",
+      ".mzo":"audio/mzo",
       ".txt":"text/plain",
       ".html":"text/html",
       ".htm":"text/html",
