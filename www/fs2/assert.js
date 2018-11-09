@@ -15,7 +15,7 @@ define([],function () {
             var a=$a(arguments);
             var value=a.shift();
             a=flatten(a);
-            a=this.failMesg.concat(value).concat(a).concat(["mode",this._mode]);
+            a=this.failMesg.concat(value).concat(a);//.concat(["(mode:",this._mode,")"]);
             console.log.apply(console,a);
             if (this.isDefensive()) return value;
             if (this.isBool()) return false;
@@ -73,6 +73,10 @@ define([],function () {
             }
             if (t===Number || t=="number") {
                 this.assert(typeof(v)=="number",[v,"should be a number"]);
+                return this.isBool()?true:value;
+            }
+            if (t===Boolean || t=="boolean") {
+                this.assert(typeof(v)=="boolean",[v,"should be a boolean"]);
                 return this.isBool()?true:value;
             }
             if (t instanceof RegExp || (typeof global=="object" && typeof global.RegExp=="function" && t instanceof global.RegExp)) {

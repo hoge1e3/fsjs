@@ -280,8 +280,8 @@ try{
         tmp.setBlob(b).then(function () {
             checkSame(f,tmp);
             console.log("BLOB read done!",f.name(),tmp.name());
-            tmp.rm();
-            f.rm();
+            tmp.rm({noTrash:true});
+            f.rm({noTrash:true});
         });
         //setTimeout(function () {location.reload();},10000);
     } else {
