@@ -91,6 +91,21 @@ try{
         });
         testd.rel("sub/test2.txt").text(romd.rel("Actor.tonyu").text());
         chkrom();
+        var tncnt=0;
+        romd.recursive(function (f) {
+            //console.log("ROM",tncnt,f.path());
+            tncnt++;
+        },{excludes:function (f){ return !f.isDir() && f.ext()!==".tonyu"; }});
+        console.log(".tonyu files in romd/",tncnt);
+        assert.eq(tncnt,46,"tncnt");
+        tncnt=0;
+        var exdirs=["physics/","event/","graphics/"];
+        romd.recursive(function (f) {
+            tncnt++;
+        },{excludes:exdirs});
+        console.log("files in romd/ except",exdirs,tncnt);
+        assert.eq(tncnt,33,"tncnt");
+
         assert(testd.rel("sub/").exists());
         assert(rootFS.get("/testdir/sub/").exists());
         assert(testf.exists());

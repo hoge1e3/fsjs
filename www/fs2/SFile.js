@@ -409,8 +409,9 @@ SFile.prototype={
     },
     recursive:function (fun,options) {
         var dir=this.assertDir();
+        options=dir.convertOptions(options);
         return dir.each(function (f) {
-            if (f.isDir()) return f.recursive(fun);
+            if (f.isDir()) return f.recursive(fun,options);
             else return fun(f);
         },options);
     },
