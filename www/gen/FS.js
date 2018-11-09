@@ -112,7 +112,7 @@ define('assert',[],function () {
             var a=$a(arguments);
             var value=a.shift();
             a=flatten(a);
-            a=this.failMesg.concat(value).concat(a).concat(["mode",this._mode]);
+            a=this.failMesg.concat(value).concat(a);//.concat(["(mode:",this._mode,")"]);
             console.log.apply(console,a);
             if (this.isDefensive()) return value;
             if (this.isBool()) return false;
@@ -170,6 +170,10 @@ define('assert',[],function () {
             }
             if (t===Number || t=="number") {
                 this.assert(typeof(v)=="number",[v,"should be a number"]);
+                return this.isBool()?true:value;
+            }
+            if (t===Boolean || t=="boolean") {
+                this.assert(typeof(v)=="boolean",[v,"should be a boolean"]);
                 return this.isBool()?true:value;
             }
             if (t instanceof RegExp || (typeof global=="object" && typeof global.RegExp=="function" && t instanceof global.RegExp)) {
@@ -493,6 +497,7 @@ define('MIMETypes',[], function () {
       ".ogg":"audio/ogg",
       ".midi":"audio/midi",
       ".mid":"audio/midi",
+      ".mzo":"audio/mzo",
       ".txt":"text/plain",
       ".html":"text/html",
       ".htm":"text/html",
@@ -1192,7 +1197,14 @@ return {
 };
 });
 
-define('Content',["assert","Util"],function (assert,Util) {
+/*! @source http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js */
+var saveAs=saveAs||"undefined"!==typeof navigator&&navigator.msSaveOrOpenBlob&&navigator.msSaveOrOpenBlob.bind(navigator)||function(a){"use strict";if("undefined"===typeof navigator||!/MSIE [1-9]\./.test(navigator.userAgent)){var k=a.document,n=k.createElementNS("http://www.w3.org/1999/xhtml","a"),w="download"in n,x=function(c){var e=k.createEvent("MouseEvents");e.initMouseEvent("click",!0,!1,a,0,0,0,0,0,!1,!1,!1,!1,0,null);c.dispatchEvent(e)},q=a.webkitRequestFileSystem,u=a.requestFileSystem||q||a.mozRequestFileSystem,
+y=function(c){(a.setImmediate||a.setTimeout)(function(){throw c;},0)},r=0,s=function(c){var e=function(){"string"===typeof c?(a.URL||a.webkitURL||a).revokeObjectURL(c):c.remove()};a.chrome?e():setTimeout(e,10)},t=function(c,a,d){a=[].concat(a);for(var b=a.length;b--;){var l=c["on"+a[b]];if("function"===typeof l)try{l.call(c,d||c)}catch(f){y(f)}}},m=function(c,e){var d=this,b=c.type,l=!1,f,p,k=function(){t(d,["writestart","progress","write","writeend"])},g=function(){if(l||!f)f=(a.URL||a.webkitURL||
+a).createObjectURL(c);p?p.location.href=f:void 0==a.open(f,"_blank")&&"undefined"!==typeof safari&&(a.location.href=f);d.readyState=d.DONE;k();s(f)},h=function(a){return function(){if(d.readyState!==d.DONE)return a.apply(this,arguments)}},m={create:!0,exclusive:!1},v;d.readyState=d.INIT;e||(e="download");if(w)f=(a.URL||a.webkitURL||a).createObjectURL(c),n.href=f,n.download=e,x(n),d.readyState=d.DONE,k(),s(f);else{a.chrome&&b&&"application/octet-stream"!==b&&(v=c.slice||c.webkitSlice,c=v.call(c,0,
+c.size,"application/octet-stream"),l=!0);q&&"download"!==e&&(e+=".download");if("application/octet-stream"===b||q)p=a;u?(r+=c.size,u(a.TEMPORARY,r,h(function(a){a.root.getDirectory("saved",m,h(function(a){var b=function(){a.getFile(e,m,h(function(a){a.createWriter(h(function(b){b.onwriteend=function(b){p.location.href=a.toURL();d.readyState=d.DONE;t(d,"writeend",b);s(a)};b.onerror=function(){var a=b.error;a.code!==a.ABORT_ERR&&g()};["writestart","progress","write","abort"].forEach(function(a){b["on"+
+a]=d["on"+a]});b.write(c);d.abort=function(){b.abort();d.readyState=d.DONE};d.readyState=d.WRITING}),g)}),g)};a.getFile(e,{create:!1},h(function(a){a.remove();b()}),h(function(a){a.code===a.NOT_FOUND_ERR?b():g()}))}),g)}),g)):g()}},b=m.prototype;b.abort=function(){this.readyState=this.DONE;t(this,"abort")};b.readyState=b.INIT=0;b.WRITING=1;b.DONE=2;b.error=b.onwritestart=b.onprogress=b.onwrite=b.onabort=b.onerror=b.onwriteend=null;return function(a,b){return new m(a,b)}}}("undefined"!==typeof self&&
+self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof module&&null!==module?module.exports=saveAs:"undefined"!==typeof define&&null!==define&&null!=define.amd&&define('FileSaver.min',[],function(){return saveAs});
+define('Content',["assert","Util","FileSaver.min"],function (assert,Util,saveAs) {
     var Content=function () {};
     var extend=Util.extend;
     // ------ constructor
@@ -1243,6 +1255,7 @@ define('Content',["assert","Util"],function (assert,Util) {
     Content.looksLikeDataURL=function (text) {
         return text.match(/^data:/);
     };
+    Content.download=saveAs;
     // why blob is not here... because blob content requires FileReader (cannot read instantly!)
     //------- methods
     var p=Content.prototype;
@@ -1321,7 +1334,7 @@ define('Content',["assert","Util"],function (assert,Util) {
         return new Blob([this.toBin(ArrayBuffer)],{type:this.contentType});
     };
     p.download=function (name) {
-        saveAs(this.toBlob(),name);
+        Content.download(this.toBlob(),name);
     };
     //--------Util funcs
     // From http://hakuhin.jp/js/base64.html#BASE64_DECODE_ARRAY_BUFFER
@@ -2240,15 +2253,8 @@ define('Env',["assert","PathUtil"],function (A,P) {
     };
     return Env;
 });
-/*! @source http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js */
-var saveAs=saveAs||"undefined"!==typeof navigator&&navigator.msSaveOrOpenBlob&&navigator.msSaveOrOpenBlob.bind(navigator)||function(a){"use strict";if("undefined"===typeof navigator||!/MSIE [1-9]\./.test(navigator.userAgent)){var k=a.document,n=k.createElementNS("http://www.w3.org/1999/xhtml","a"),w="download"in n,x=function(c){var e=k.createEvent("MouseEvents");e.initMouseEvent("click",!0,!1,a,0,0,0,0,0,!1,!1,!1,!1,0,null);c.dispatchEvent(e)},q=a.webkitRequestFileSystem,u=a.requestFileSystem||q||a.mozRequestFileSystem,
-y=function(c){(a.setImmediate||a.setTimeout)(function(){throw c;},0)},r=0,s=function(c){var e=function(){"string"===typeof c?(a.URL||a.webkitURL||a).revokeObjectURL(c):c.remove()};a.chrome?e():setTimeout(e,10)},t=function(c,a,d){a=[].concat(a);for(var b=a.length;b--;){var l=c["on"+a[b]];if("function"===typeof l)try{l.call(c,d||c)}catch(f){y(f)}}},m=function(c,e){var d=this,b=c.type,l=!1,f,p,k=function(){t(d,["writestart","progress","write","writeend"])},g=function(){if(l||!f)f=(a.URL||a.webkitURL||
-a).createObjectURL(c);p?p.location.href=f:void 0==a.open(f,"_blank")&&"undefined"!==typeof safari&&(a.location.href=f);d.readyState=d.DONE;k();s(f)},h=function(a){return function(){if(d.readyState!==d.DONE)return a.apply(this,arguments)}},m={create:!0,exclusive:!1},v;d.readyState=d.INIT;e||(e="download");if(w)f=(a.URL||a.webkitURL||a).createObjectURL(c),n.href=f,n.download=e,x(n),d.readyState=d.DONE,k(),s(f);else{a.chrome&&b&&"application/octet-stream"!==b&&(v=c.slice||c.webkitSlice,c=v.call(c,0,
-c.size,"application/octet-stream"),l=!0);q&&"download"!==e&&(e+=".download");if("application/octet-stream"===b||q)p=a;u?(r+=c.size,u(a.TEMPORARY,r,h(function(a){a.root.getDirectory("saved",m,h(function(a){var b=function(){a.getFile(e,m,h(function(a){a.createWriter(h(function(b){b.onwriteend=function(b){p.location.href=a.toURL();d.readyState=d.DONE;t(d,"writeend",b);s(a)};b.onerror=function(){var a=b.error;a.code!==a.ABORT_ERR&&g()};["writestart","progress","write","abort"].forEach(function(a){b["on"+
-a]=d["on"+a]});b.write(c);d.abort=function(){b.abort();d.readyState=d.DONE};d.readyState=d.WRITING}),g)}),g)};a.getFile(e,{create:!1},h(function(a){a.remove();b()}),h(function(a){a.code===a.NOT_FOUND_ERR?b():g()}))}),g)}),g)):g()}},b=m.prototype;b.abort=function(){this.readyState=this.DONE;t(this,"abort")};b.readyState=b.INIT=0;b.WRITING=1;b.DONE=2;b.error=b.onwritestart=b.onprogress=b.onwrite=b.onabort=b.onerror=b.onwriteend=null;return function(a,b){return new m(a,b)}}}("undefined"!==typeof self&&
-self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof module&&null!==module?module.exports=saveAs:"undefined"!==typeof define&&null!==define&&null!=define.amd&&define('FileSaver.min',[],function(){return saveAs});
 define('SFile',["extend","assert","PathUtil","Util","Content","FSClass","FileSaver.min","DeferredUtil"],
-function (extend,A,P,Util,Content,FSClass,sv,DU) {
+function (extend,A,P,Util,Content,FSClass,saveAs,DU) {
 
 var SFile=function (rootFS, path) {
     A.is(path, P.Absolute);
@@ -2552,7 +2558,14 @@ SFile.prototype={
     getURL: function () {
         return this.act.fs.getURL(this.act.path);
     },
-    lines:function () {
+    lines:function (lines) {
+        if (lines instanceof Array) {//WRITE
+            return this.text(lines.join("\n"));
+        } else if (typeof lines==="function") {//READ async
+            return this.text(function (r) {
+                return lines(r.replace(/\r/g,"").split("\n"));
+            });
+        }
         return this.text().replace(/\r/g,"").split("\n");
     },
     obj: function () {
@@ -2669,8 +2682,9 @@ SFile.prototype={
             for (var i=0;i<di.length; i++) {
                 var name=di[i];
                 //if (!options.includeTrashed && dinfo[i].trashed) continue;
-                if (options.excludes[path+name] ) continue;
-                res.push(dir.rel(name));
+                var f=dir.rel(name);
+                if (options.excludesF(f) ) continue;
+                res.push(f);
             }
             if (typeof ord=="function" && res.sort) res.sort(ord);
             return res;
@@ -2679,28 +2693,6 @@ SFile.prototype={
     listFiles:function (options) {
         var args=Array.prototype.slice.call(arguments);
         return DU.assertResolved(this.listFilesAsync.apply(this,args));
-        //----------ABOLISHED
-        if (typeof args[0]==="function") {
-            var f=args.shift();
-            return this.listFilesAsync.apply(this,args).then(f);
-        }
-        A(options==null || typeof options=="object");
-        var dir=this.assertDir();
-        var path=this.path();
-        var ord;
-        if (typeof options=="function") ord=options;
-        options=dir.convertOptions(options);
-        if (!ord) ord=options.order;
-        var di=this.act.fs.opendir(this.act.path, options);
-        var res=[];
-        for (var i=0;i<di.length; i++) {
-            var name=di[i];
-            //if (!options.includeTrashed && dinfo[i].trashed) continue;
-            if (options.excludes[path+name] ) continue;
-            res.push(dir.rel(name));
-        }
-        if (typeof ord=="function" && res.sort) res.sort(ord);
-        return res;
     },
     ls:function (options) {
         A(options==null || typeof options=="object");
@@ -2717,19 +2709,26 @@ SFile.prototype={
         var options=Util.extend({},o);
         var dir=this.assertDir();
         var pathR=this.path();
-        if (!options.excludes) options.excludes={};
-        if (options.excludes instanceof Array) {
-            var excludes={};
-            options.excludes.forEach(function (e) {
-                if (P.startsWith(e,"/")) {
-                    excludes[e]=1;
-                } else {
-                    excludes[pathR+e]=1;
-                }
-            });
-            options.excludes=excludes;
+        var excludes=options.excludes || {};
+        if (typeof excludes==="function") {
+            options.excludesF=excludes;
+        } else if (typeof excludes==="object") {
+            if (excludes instanceof Array) {
+                var nex={};
+                excludes.forEach(function (e) {
+                    if (P.startsWith(e,"/")) {
+                        nex[e]=1;
+                    } else {
+                        nex[pathR+e]=1;
+                    }
+                });
+                excludes=nex;
+            }
+            options.excludesF=function (f) {
+                return excludes[f.path()];
+            };
         }
-        return A.is(options,{excludes:{}});
+        return A.is(options,{excludesF:Function});
     },
     mkdir: function () {
         return this.touch();
@@ -2775,6 +2774,22 @@ SFile.prototype={
         var a=Array.prototype.slice.call(arguments);
         console.log.apply(console,a);
         throw new Error(a.join(""));
+    },
+    exportAsObject: function (options) {
+        var base=this;
+        var data={};
+        this.recursive(function (f) {
+            data[f.relPath(base)]=f.text();
+        },options);
+        var req={base:base.path(),data:data};
+        return req;
+    },
+    importFromObject: function (data, options) {
+        if (typeof data==="string") data=JSON.parse(data);
+        var data=data.data;
+        for (var k in data) {
+            this.rel(k).text(data[k]);
+        }
     }
 };
 Object.defineProperty(SFile.prototype,"act",{
@@ -3046,8 +3061,32 @@ define('FS',["FSClass","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SF
         if (!fs) {
             if (typeof process=="object") {
                 fs=new NativeFS();
-            } else {
+            } else if (typeof localStorage==="object") {
                 fs=new LSFS(localStorage);
+            } else if (typeof importScripts==="function") {
+                // Worker
+                self.addEventListener("message", function (e) {
+                    var data=e.data;
+                    if (typeof data==="string") {
+                        data=JSON.parse(data);
+                    }
+                    switch(data.type) {
+                    case "upload":
+                        FS.get(data.base).importFromObject(data.data);
+                        break;
+                    case "observe":
+                        rootFS.observe(data.path, function (path,meta) {
+                            self.postMessage(JSON.stringify({
+                                type: "changed",
+                                path: path,
+                                content: FS.get(path).text(),
+                                meta: meta
+                            }));
+                        });
+                        break;
+                    }
+                });
+                fs=LSFS.ramDisk();
             }
         }
         rootFS=new RootFS(fs);
