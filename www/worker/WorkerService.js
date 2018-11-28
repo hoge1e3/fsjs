@@ -60,6 +60,7 @@ define(["Klass","DeferredUtil"],function (Klass,DU) {
             // in browser context, serve browser functions to worker
             // in worker context, serve worker functions to browser
             this.paths.push({path:path,func:func});
+            return this;
         },
         newID: function () {
             return this.idSeq++;
