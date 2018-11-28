@@ -1,4 +1,4 @@
-define(["extend","assert","PathUtil","Util","Content","FSClass","FileSaver.min","DeferredUtil"],
+define(["extend","assert","PathUtil","Util","Content","FSClass","FileSaver","DeferredUtil"],
 function (extend,A,P,Util,Content,FSClass,saveAs,DU) {
 
 var SFile=function (rootFS, path) {

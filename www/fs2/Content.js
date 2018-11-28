@@ -1,4 +1,4 @@
-define(["assert","Util","FileSaver.min"],function (assert,Util,saveAs) {
+define(["assert","Util","FileSaver"],function (assert,Util,saveAs) {
     var Content=function () {};
     var extend=Util.extend;
     // ------ constructor

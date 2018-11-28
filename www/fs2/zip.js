@@ -1,4 +1,4 @@
-define(["SFile",/*"jszip",*/"FileSaver.min","Util","DeferredUtil"],
+define(["SFile",/*"jszip",*/"FileSaver","Util","DeferredUtil"],
 function (SFile,/*JSZip,*/fsv,Util,DU) {
     var zip={};
     zip.setJSZip=function (JSZip) {
