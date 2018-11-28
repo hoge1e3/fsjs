@@ -34,12 +34,18 @@ define(["assert","Util","FileSaver"],function (assert,Util,saveAs) {
     Content.bin=function (bin, contentType) {
         assert(contentType, "contentType should be set");
         var b=new Content;
-        if (bin && Content.isBuffer(bin.buffer)) {
-            b.arrayBuffer=bin.buffer;
-        } else if (Content.isNodeBuffer(bin)) {
+        if (Content.isNodeBuffer(bin)) {
+            b.bufType="node";
             b.nodeBuffer=bin;
         } else if (bin instanceof ArrayBuffer) {
+            b.bufType="array2";
             b.arrayBuffer=bin;
+        } else if (bin && Content.isBuffer(bin.buffer)) {
+            // in node.js v8.9.1 ,
+            ///  bin is Buffer, bin.buffer is ArrayBuffer
+            //   and bin.buffer is content of different file(memory leak?) 
+            b.bufType="array1";
+            b.arrayBuffer=bin.buffer;
         } else {
             throw new Error(bin+" is not a bin");
         }

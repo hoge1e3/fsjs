@@ -415,7 +415,35 @@ SFile.prototype={
             else return fun(f);
         },options);
     },
+    _listFiles:function (options,async) {
+        A(options==null || typeof options=="object");
+        var dir=this.assertDir();
+        var path=this.path();
+        var ord;
+        options=dir.convertOptions(options);
+        if (!ord) ord=options.order;
+        if (async) {
+            return this.act.fs.opendirAsync(this.act.path, options).
+            then(cvt);
+        } else {
+            return cvt( this.act.fs.opendir(this.act.path, options));
+        }
+        function cvt(di) {
+            var res=[];
+            for (var i=0;i<di.length; i++) {
+                var name=di[i];
+                //if (!options.includeTrashed && dinfo[i].trashed) continue;
+                var f=dir.rel(name);
+                if (options.excludesF(f) ) continue;
+                res.push(f);
+            }
+            if (typeof ord=="function" && res.sort) res.sort(ord);
+            return res;
+        }
+    },
     listFilesAsync:function (options) {
+        return this._listFiles(options,true);
+        /*
         A(options==null || typeof options=="object");
         var dir=this.assertDir();
         var path=this.path();
@@ -434,11 +462,12 @@ SFile.prototype={
             }
             if (typeof ord=="function" && res.sort) res.sort(ord);
             return res;
-        });
+        });*/
     },
     listFiles:function (options) {
-        var args=Array.prototype.slice.call(arguments);
-        return DU.assertResolved(this.listFilesAsync.apply(this,args));
+        return this._listFiles(options,false);
+        /*var args=Array.prototype.slice.call(arguments);
+        return DU.assertResolved(this.listFilesAsync.apply(this,args));*/
     },
     ls:function (options) {
         A(options==null || typeof options=="object");

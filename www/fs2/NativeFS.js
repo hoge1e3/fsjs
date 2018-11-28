@@ -8,6 +8,9 @@ define(["FSClass","assert","PathUtil","extend","Content"],
     }
     var assert=A;
     var fs=require("fs");
+    if (!fs) {
+        fs=requirejs.nodeRequire("fs");
+    }
     var NativeFS=function (rootPoint) {
         if (rootPoint) {
             A.is(rootPoint, P.AbsDir);

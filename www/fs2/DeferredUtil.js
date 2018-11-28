@@ -81,7 +81,6 @@ define([], function () {
                 resolved=true;
             });
             if (!resolved) {
-                console.log(r);
                 throw new Error("Promise not resolved");
             }
             return res;
