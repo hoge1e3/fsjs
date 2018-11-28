@@ -616,7 +616,6 @@ define('DeferredUtil',[], function () {
                 resolved=true;
             });
             if (!resolved) {
-                console.log(r);
                 throw new Error("Promise not resolved");
             }
             return res;
@@ -1197,14 +1196,174 @@ return {
 };
 });
 
-/*! @source http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js */
-var saveAs=saveAs||"undefined"!==typeof navigator&&navigator.msSaveOrOpenBlob&&navigator.msSaveOrOpenBlob.bind(navigator)||function(a){"use strict";if("undefined"===typeof navigator||!/MSIE [1-9]\./.test(navigator.userAgent)){var k=a.document,n=k.createElementNS("http://www.w3.org/1999/xhtml","a"),w="download"in n,x=function(c){var e=k.createEvent("MouseEvents");e.initMouseEvent("click",!0,!1,a,0,0,0,0,0,!1,!1,!1,!1,0,null);c.dispatchEvent(e)},q=a.webkitRequestFileSystem,u=a.requestFileSystem||q||a.mozRequestFileSystem,
-y=function(c){(a.setImmediate||a.setTimeout)(function(){throw c;},0)},r=0,s=function(c){var e=function(){"string"===typeof c?(a.URL||a.webkitURL||a).revokeObjectURL(c):c.remove()};a.chrome?e():setTimeout(e,10)},t=function(c,a,d){a=[].concat(a);for(var b=a.length;b--;){var l=c["on"+a[b]];if("function"===typeof l)try{l.call(c,d||c)}catch(f){y(f)}}},m=function(c,e){var d=this,b=c.type,l=!1,f,p,k=function(){t(d,["writestart","progress","write","writeend"])},g=function(){if(l||!f)f=(a.URL||a.webkitURL||
-a).createObjectURL(c);p?p.location.href=f:void 0==a.open(f,"_blank")&&"undefined"!==typeof safari&&(a.location.href=f);d.readyState=d.DONE;k();s(f)},h=function(a){return function(){if(d.readyState!==d.DONE)return a.apply(this,arguments)}},m={create:!0,exclusive:!1},v;d.readyState=d.INIT;e||(e="download");if(w)f=(a.URL||a.webkitURL||a).createObjectURL(c),n.href=f,n.download=e,x(n),d.readyState=d.DONE,k(),s(f);else{a.chrome&&b&&"application/octet-stream"!==b&&(v=c.slice||c.webkitSlice,c=v.call(c,0,
-c.size,"application/octet-stream"),l=!0);q&&"download"!==e&&(e+=".download");if("application/octet-stream"===b||q)p=a;u?(r+=c.size,u(a.TEMPORARY,r,h(function(a){a.root.getDirectory("saved",m,h(function(a){var b=function(){a.getFile(e,m,h(function(a){a.createWriter(h(function(b){b.onwriteend=function(b){p.location.href=a.toURL();d.readyState=d.DONE;t(d,"writeend",b);s(a)};b.onerror=function(){var a=b.error;a.code!==a.ABORT_ERR&&g()};["writestart","progress","write","abort"].forEach(function(a){b["on"+
-a]=d["on"+a]});b.write(c);d.abort=function(){b.abort();d.readyState=d.DONE};d.readyState=d.WRITING}),g)}),g)};a.getFile(e,{create:!1},h(function(a){a.remove();b()}),h(function(a){a.code===a.NOT_FOUND_ERR?b():g()}))}),g)}),g)):g()}},b=m.prototype;b.abort=function(){this.readyState=this.DONE;t(this,"abort")};b.readyState=b.INIT=0;b.WRITING=1;b.DONE=2;b.error=b.onwritestart=b.onprogress=b.onwrite=b.onabort=b.onerror=b.onwriteend=null;return function(a,b){return new m(a,b)}}}("undefined"!==typeof self&&
-self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof module&&null!==module?module.exports=saveAs:"undefined"!==typeof define&&null!==define&&null!=define.amd&&define('FileSaver.min',[],function(){return saveAs});
-define('Content',["assert","Util","FileSaver.min"],function (assert,Util,saveAs) {
+/*
+* FileSaver.js
+* A saveAs() FileSaver implementation.
+*
+* By Eli Grey, http://eligrey.com
+*
+* License : https://github.com/eligrey/FileSaver.js/blob/master/LICENSE.md (MIT)
+* source  : http://purl.eligrey.com/github/FileSaver.js
+*/
+
+
+// The one and only way of getting global scope in all environments
+// https://stackoverflow.com/q/3277182/1008999
+var _global = typeof window === 'object' && window.window === window
+  ? window : typeof self === 'object' && self.self === self
+  ? self : typeof global === 'object' && global.global === global
+  ? global
+  : this
+
+function bom (blob, opts) {
+  if (typeof opts === 'undefined') opts = { autoBom: false }
+  else if (typeof opts !== 'object') {
+    console.warn('Depricated: Expected third argument to be a object')
+    opts = { autoBom: !opts }
+  }
+
+  // prepend BOM for UTF-8 XML and text/* types (including HTML)
+  // note: your browser will automatically convert UTF-16 U+FEFF to EF BB BF
+  if (opts.autoBom && /^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(blob.type)) {
+    return new Blob([String.fromCharCode(0xFEFF), blob], { type: blob.type })
+  }
+  return blob
+}
+
+function download (url, name, opts) {
+  var xhr = new XMLHttpRequest()
+  xhr.open('GET', url)
+  xhr.responseType = 'blob'
+  xhr.onload = function () {
+    saveAs(xhr.response, name, opts)
+  }
+  xhr.onerror = function () {
+    console.error('could not download file')
+  }
+  xhr.send()
+}
+
+function corsEnabled (url) {
+  var xhr = new XMLHttpRequest()
+  // use sync to avoid popup blocker
+  xhr.open('HEAD', url, false)
+  xhr.send()
+  return xhr.status >= 200 && xhr.status <= 299
+}
+
+// `a.click()` doesn't work for all browsers (#465)
+function click(node) {
+  try {
+    node.dispatchEvent(new MouseEvent('click'))
+  } catch (e) {
+    var evt = document.createEvent('MouseEvents')
+    evt.initMouseEvent('click', true, true, window, 0, 0, 0, 80,
+                          20, false, false, false, false, 0, null)
+    node.dispatchEvent(evt)
+  }
+}
+
+var saveAs = _global.saveAs ||
+// probably in some web worker
+(typeof window !== 'object' || window !== _global)
+  ? function saveAs () { /* noop */ }
+
+// Use download attribute first if possible (#193 Lumia mobile)
+: 'download' in HTMLAnchorElement.prototype
+? function saveAs (blob, name, opts) {
+  var URL = _global.URL || _global.webkitURL
+  var a = document.createElement('a')
+  name = name || blob.name || 'download'
+
+  a.download = name
+  a.rel = 'noopener' // tabnabbing
+
+  // TODO: detect chrome extensions & packaged apps
+  // a.target = '_blank'
+
+  if (typeof blob === 'string') {
+    // Support regular links
+    a.href = blob
+    if (a.origin !== location.origin) {
+      corsEnabled(a.href)
+        ? download(blob, name, opts)
+        : click(a, a.target = '_blank')
+    } else {
+      click(a)
+    }
+  } else {
+    // Support blobs
+    a.href = URL.createObjectURL(blob)
+    setTimeout(function () { URL.revokeObjectURL(a.href) }, 4E4) // 40s
+    setTimeout(function () { click(a) }, 0)
+  }
+}
+
+// Use msSaveOrOpenBlob as a second approach
+: 'msSaveOrOpenBlob' in navigator
+? function saveAs (blob, name, opts) {
+  name = name || blob.name || 'download'
+
+  if (typeof blob === 'string') {
+    if (corsEnabled(blob)) {
+      download(blob, name, opts)
+    } else {
+      var a = document.createElement('a')
+      a.href = blob
+      a.target = '_blank'
+      setTimeout(function () { click(a) })
+    }
+  } else {
+    navigator.msSaveOrOpenBlob(bom(blob, opts), name)
+  }
+}
+
+// Fallback to using FileReader and a popup
+: function saveAs (blob, name, opts, popup) {
+  // Open a popup immediately do go around popup blocker
+  // Mostly only avalible on user interaction and the fileReader is async so...
+  popup = popup || open('', '_blank')
+  if (popup) {
+    popup.document.title =
+    popup.document.body.innerText = 'downloading...'
+  }
+
+  if (typeof blob === 'string') return download(blob, name, opts)
+
+  var force = blob.type === 'application/octet-stream'
+  var isSafari = /constructor/i.test(_global.HTMLElement) || _global.safari
+  var isChromeIOS = /CriOS\/[\d]+/.test(navigator.userAgent)
+
+  if ((isChromeIOS || (force && isSafari)) && typeof FileReader === 'object') {
+    // Safari doesn't allow downloading of blob urls
+    var reader = new FileReader()
+    reader.onloadend = function () {
+      var url = reader.result
+      url = isChromeIOS ? url : url.replace(/^data:[^;]*;/, 'data:attachment/file;')
+      if (popup) popup.location.href = url
+      else location = url
+      popup = null // reverse-tabnabbing #460
+    }
+    reader.readAsDataURL(blob)
+  } else {
+    var URL = _global.URL || _global.webkitURL
+    var url = URL.createObjectURL(blob)
+    if (popup) popup.location = url
+    else location.href = url
+    popup = null // reverse-tabnabbing #460
+    setTimeout(function () { URL.revokeObjectURL(url) }, 4E4) // 40s
+  }
+}
+
+_global.saveAs = saveAs.saveAs = saveAs
+
+if (typeof module !== 'undefined') {
+  module.exports = saveAs;
+}
+;
+define("FileSaver", function(){});
+
+define('Content',["assert","Util","FileSaver"],function (assert,Util,saveAs) {
     var Content=function () {};
     var extend=Util.extend;
     // ------ constructor
@@ -1240,12 +1399,18 @@ define('Content',["assert","Util","FileSaver.min"],function (assert,Util,saveAs)
     Content.bin=function (bin, contentType) {
         assert(contentType, "contentType should be set");
         var b=new Content;
-        if (bin && Content.isBuffer(bin.buffer)) {
-            b.arrayBuffer=bin.buffer;
-        } else if (Content.isNodeBuffer(bin)) {
+        if (Content.isNodeBuffer(bin)) {
+            b.bufType="node";
             b.nodeBuffer=bin;
         } else if (bin instanceof ArrayBuffer) {
+            b.bufType="array2";
             b.arrayBuffer=bin;
+        } else if (bin && Content.isBuffer(bin.buffer)) {
+            // in node.js v8.9.1 ,
+            ///  bin is Buffer, bin.buffer is ArrayBuffer
+            //   and bin.buffer is content of different file(memory leak?) 
+            b.bufType="array1";
+            b.arrayBuffer=bin.buffer;
         } else {
             throw new Error(bin+" is not a bin");
         }
@@ -1548,6 +1713,9 @@ define('NativeFS',["FSClass","assert","PathUtil","extend","Content"],
     }
     var assert=A;
     var fs=require("fs");
+    if (!fs) {
+        fs=requirejs.nodeRequire("fs");
+    }
     var NativeFS=function (rootPoint) {
         if (rootPoint) {
             A.is(rootPoint, P.AbsDir);
@@ -2144,6 +2312,7 @@ define('LSFS',["FSClass","PathUtil","extend","assert","Util","Content"],
  */
 
 // use this transport for "binary" data type
+if (typeof $!=="undefined")
 $.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
     // check for conditions and support for blob / arraybuffer response type
     if (window.FormData && ((options.dataType && (options.dataType == 'binary')) || (options.data && ((window.ArrayBuffer && options.data instanceof ArrayBuffer) || (window.Blob && options.data instanceof Blob)))))
@@ -2185,6 +2354,7 @@ $.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
         };
     }
 });
+
 define("jquery.binarytransport", function(){});
 
 define('WebFS',["FSClass","jquery.binarytransport","DeferredUtil","Content","PathUtil"],
@@ -2253,7 +2423,7 @@ define('Env',["assert","PathUtil"],function (A,P) {
     };
     return Env;
 });
-define('SFile',["extend","assert","PathUtil","Util","Content","FSClass","FileSaver.min","DeferredUtil"],
+define('SFile',["extend","assert","PathUtil","Util","Content","FSClass","FileSaver","DeferredUtil"],
 function (extend,A,P,Util,Content,FSClass,saveAs,DU) {
 
 var SFile=function (rootFS, path) {
@@ -2670,7 +2840,35 @@ SFile.prototype={
             else return fun(f);
         },options);
     },
+    _listFiles:function (options,async) {
+        A(options==null || typeof options=="object");
+        var dir=this.assertDir();
+        var path=this.path();
+        var ord;
+        options=dir.convertOptions(options);
+        if (!ord) ord=options.order;
+        if (async) {
+            return this.act.fs.opendirAsync(this.act.path, options).
+            then(cvt);
+        } else {
+            return cvt( this.act.fs.opendir(this.act.path, options));
+        }
+        function cvt(di) {
+            var res=[];
+            for (var i=0;i<di.length; i++) {
+                var name=di[i];
+                //if (!options.includeTrashed && dinfo[i].trashed) continue;
+                var f=dir.rel(name);
+                if (options.excludesF(f) ) continue;
+                res.push(f);
+            }
+            if (typeof ord=="function" && res.sort) res.sort(ord);
+            return res;
+        }
+    },
     listFilesAsync:function (options) {
+        return this._listFiles(options,true);
+        /*
         A(options==null || typeof options=="object");
         var dir=this.assertDir();
         var path=this.path();
@@ -2689,11 +2887,12 @@ SFile.prototype={
             }
             if (typeof ord=="function" && res.sort) res.sort(ord);
             return res;
-        });
+        });*/
     },
     listFiles:function (options) {
-        var args=Array.prototype.slice.call(arguments);
-        return DU.assertResolved(this.listFilesAsync.apply(this,args));
+        return this._listFiles(options,false);
+        /*var args=Array.prototype.slice.call(arguments);
+        return DU.assertResolved(this.listFilesAsync.apply(this,args));*/
     },
     ls:function (options) {
         A(options==null || typeof options=="object");
@@ -2904,7 +3103,7 @@ define('RootFS',["assert","FSClass","PathUtil","SFile"], function (assert,FS,P,S
     }
     return RootFS;
 });
-define('zip',["SFile",/*"jszip",*/"FileSaver.min","Util","DeferredUtil"],
+define('zip',["SFile",/*"jszip",*/"FileSaver","Util","DeferredUtil"],
 function (SFile,/*JSZip,*/fsv,Util,DU) {
     var zip={};
     zip.setJSZip=function (JSZip) {
@@ -3132,7 +3331,8 @@ define('FS',["FSClass","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SF
 	requirejs(["FS"], function (r) {
 	  resMod=r;
 	});
-	if (window.FS===undefined) window.FS=resMod;
+	if (typeof window!=="undefined" && window.FS===undefined) window.FS=resMod;
+	if (typeof module!=="undefined") module=resMod;
 	return resMod;
 });
 //})(window);
