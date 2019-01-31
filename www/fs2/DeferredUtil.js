@@ -6,8 +6,10 @@ define([], function () {
     );
     //  promise.then(S,F)  and promise.then(S).fail(F) is not same!
     //  ->  when fail on S,  F is executed?
+    //   same is promise.then(S).then(same,F)
     var DU;
     var DUBRK=function(r){this.res=r;};
+    function same(e){return e;}
     DU={
         isNativePromise: function (p) {
             return p && (typeof p.then==="function") &&
@@ -108,7 +110,7 @@ define([], function () {
                     } else {
                         resolve(r);
                     }
-                }).fail(function (r) {
+                }).then(same,function (r) {
                     if (!isDeferred) {
                         setTimeout(function () {
                             reject(r);
@@ -221,7 +223,7 @@ define([], function () {
                         deff1=false;
                         if (r instanceof DUBRK) return r.res;
                         if (deff2) return DU.loop(f,r); //☆
-                    }).fail(function (e) {
+                    }).then(same,function (e) {
                         deff1=false;
                         err=e;
                     });
