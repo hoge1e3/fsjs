@@ -154,6 +154,8 @@ function (extend, P, M,assert,DU){
         },
         getURL: function (path) {
             stub("");
+        },
+        onAddObserver: function (path) {
         }
     });
     //res=[]; for (var k in a) { res.push(k); } res;

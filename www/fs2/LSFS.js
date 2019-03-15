@@ -10,7 +10,7 @@ define(["FSClass","PathUtil","extend","assert","Util","Content"],
     var up = P.up.bind(P);
     var endsWith= P.endsWith.bind(P);
     //var getName = P.name.bind(P);
-    var Path=P.Path;
+    //var Path=P.Path;
     var Absolute=P.Absolute;
     var SEP= P.SEP;
     function now(){
@@ -31,7 +31,7 @@ define(["FSClass","PathUtil","extend","assert","Util","Content"],
     });
 
     LSFS.now=now;
-    LSFS.prototype=new FS;
+    LSFS.prototype=new FS();
     //private methods
     LSFS.prototype.resolveKey=function (path) {
         assert.is(path,P.Absolute);
@@ -76,9 +76,9 @@ define(["FSClass","PathUtil","extend","assert","Util","Content"],
         if (!endsWith(path, SEP)) path += SEP;
         assert(this.inMyFS(path));
         if (this.dirCache && this.dirCache[path]) return this.dirCache[path];
-        var dinfo =  {};
+        var dinfo =  {},dinfos;
         try {
-            var dinfos = this.getItem(path);
+            dinfos = this.getItem(path);
             if (dinfos) {
                 dinfo = JSON.parse(dinfos);
             }
@@ -109,13 +109,16 @@ define(["FSClass","PathUtil","extend","assert","Util","Content"],
         // trashed: this touch is caused by trashing the file/dir.
         assert.is(arguments,[Object, String, String]);
         assert(this.inMyFS(path));
+        var eventType="change";
         if (!dinfo[name]) {
+            eventType="create";
             dinfo[name] = {};
             if (trashed) dinfo[name].trashed = true;
         }
         if (!trashed) delete dinfo[name].trashed;
         dinfo[name].lastUpdate = now();
-        this.getRootFS().notifyChanged(P.rel(path,name), dinfo[name]);
+        var meta=extend({eventType:eventType},dinfo[name]);
+        this.getRootFS().notifyChanged(P.rel(path,name), meta);
         this.putDirInfo(path, dinfo, trashed);
     };
     LSFS.prototype.removeEntry=function removeEntry(dinfo, path, name) { // path:path of dinfo
@@ -125,6 +128,7 @@ define(["FSClass","PathUtil","extend","assert","Util","Content"],
                 lastUpdate: now(),
                 trashed: true
             };
+            this.getRootFS().notifyChanged(P.rel(path,name), {eventType:"trash"});
             this.putDirInfo(path, dinfo, true);
         }
     };
@@ -132,6 +136,7 @@ define(["FSClass","PathUtil","extend","assert","Util","Content"],
         assert.is(arguments,[Object, String, String]);
         if (dinfo[name]) {
             delete dinfo[name];
+            this.getRootFS().notifyChanged(P.rel(path,name), {eventType:"delete"});
             this.putDirInfo(path, dinfo, true);
         }
     };

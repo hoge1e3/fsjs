@@ -186,6 +186,28 @@ define(["FSClass","assert","PathUtil","extend","Content"],
         },
         getURL:function (path) {
             return "file:///"+path.replace(/\\/g,"/");
+        },
+        onAddObserver: function (apath,options) {
+            var t=this;
+            var rfs=t.getRootFS();
+            options=options||{};
+            //console.log("Invoke oao",options);
+            var w=fs.watch(apath, options, function (evt,rpath) {
+                //console.log(path);
+                var fpath=P.rel(apath,rpath);
+                var meta;
+                if (t.exists(fpath)) {
+                    meta=extend({eventType:evt},t.getMetaInfo(fpath));
+                } else {
+                    meta={eventType:evt};
+                }
+                rfs.notifyChanged(fpath,meta);
+            });
+            return {
+                remove: function () {
+                    w.close();
+                }
+            };
         }
     });
     return NativeFS;

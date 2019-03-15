@@ -565,6 +565,18 @@ SFile.prototype={
         for (var k in data) {
             this.rel(k).text(data[k]);
         }
+    },
+    watch: function (_1,_2) {
+        var options={},handler=function(){};
+        if (typeof _1==="object") options=_1;
+        if (typeof _2==="object") options=_2;
+        if (typeof _1==="function") handler=_1;
+        if (typeof _2==="function") handler=_2;
+        var rfs=this.getFS().getRootFS();
+        //var t=this;
+        rfs.addObserver(this.path(),function (path, meta) {
+            handler(meta.eventType, rfs.get(path),meta );
+        });
     }
 };
 Object.defineProperty(SFile.prototype,"act",{

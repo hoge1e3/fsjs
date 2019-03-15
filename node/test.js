@@ -37,6 +37,9 @@ requirejs(["FS"],function (FS) {
     console.log(fl.map((f)=>f.name()));
     var f=c.rel("test.js");
     console.log(f.path(),f.text());
+    FS.get("c:\\tmp\\").watch((...e)=>console.log(e),{recursive:true});
+    FS.get("c:\\tmp\\test.txt").text("test");
+    FS.get("c:\\tmp\\a\\test.txt").text("test");
     //var fs=require("fs");
     //var rdb=fs.readFileSync(f.path());
     //console.log("rdb",rdb instanceof Buffer,rdb.length,rdb.buffer.byteLength);

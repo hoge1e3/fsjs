@@ -51,21 +51,23 @@ define(["assert","FSClass","PathUtil","SFile"], function (assert,FS,P,SFile) {
             get: function (path) {
                 assert.is(path,P.Absolute);
                 return new SFile(this.resolveFS(path), path);
-            },   
-            addObserver: function () {
+            },
+            addObserver: function (_1,_2,_3) {
                 this.observers=this.observers||[];
-                var path,f;
-                if (arguments.length==2) {
-                    path=arguments[0];
-                    f=arguments[1];
-                } else if (arguments.length==1) {
-                    path="";
-                    f=arguments[0];
-                } else {
-                    throw new Error("Invalid argument spec");
-                }
+                var options={},path,f;
+                if (typeof _1==="string") path=_1;
+                if (typeof _2==="string") path=_2;
+                if (typeof _3==="string") path=_3;
+                if (typeof _1==="object") options=_1;
+                if (typeof _2==="object") options=_2;
+                if (typeof _3==="object") options=_3;
+                if (typeof _1==="function") f=_1;
+                if (typeof _2==="function") f=_2;
+                if (typeof _3==="function") f=_3;
                 assert.is(path,String);
                 assert.is(f,Function);
+                var fs=this.resolveFS(path);
+                var remover=fs.onAddObserver(path,options);
                 var observers=this.observers;
                 var observer={
                     path:path,
@@ -73,6 +75,7 @@ define(["assert","FSClass","PathUtil","SFile"], function (assert,FS,P,SFile) {
                     remove: function () {
                         var i=observers.indexOf(this);
                         observers.splice(i,1);
+                        if (remover) remover.remove();
                     }
                 };
                 this.observers.push(observer);
