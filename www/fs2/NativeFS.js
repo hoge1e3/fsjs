@@ -1,3 +1,4 @@
+/*global require, requirejs, process, Buffer*/
 define(["FSClass","assert","PathUtil","extend","Content"],
         function (FS,A,P,extend,Content) {
     var available=(typeof process=="object"/* && process.__node_webkit*/);
@@ -20,8 +21,8 @@ define(["FSClass","assert","PathUtil","extend","Content"],
     var hasDriveLetter=P.hasDriveLetter(process.cwd());
     NativeFS.available=true;
     var SEP=P.SEP;
-    var json=JSON; // JSON changes when page changes, if this is node module, JSON is original JSON
-    var Pro=NativeFS.prototype=new FS;
+    //var json=JSON; // JSON changes when page changes, if this is node module, JSON is original JSON
+    var Pro=NativeFS.prototype=new FS();
     Pro.toNativePath = function (path) {
         // rootPoint: on NativePath   C:/jail/
         // mountPoint: on VirtualFS   /mnt/natfs/
@@ -48,14 +49,16 @@ define(["FSClass","assert","PathUtil","extend","Content"],
     NativeFS.prototype.inMyFS=function (path) {
         //console.log("inmyfs",path);
         if (this.mountPoint) {
-            return P.startsWith(path, this.mountPoint)
+            return P.startsWith(path, this.mountPoint);
         } else {
 //            console.log(path, hasDriveLetter , P.hasDriveLetter(path));
             return !( !!hasDriveLetter ^ !!P.hasDriveLetter(path));
         }
     };
+    function E(r){return r;}
     FS.delegateMethods(NativeFS.prototype, {
         getReturnTypes: function(path, options) {
+            E(path,options);
             assert.is(arguments,[String]);
             return {
                 getContent: ArrayBuffer, opendir:[String]
@@ -103,12 +106,13 @@ define(["FSClass","assert","PathUtil","extend","Content"],
             return s;
         },
         setMetaInfo: function(path, info, options) {
-
+            E(path, info, options);
             //options.lastUpdate
 
             //TODO:
         },
         isReadOnly: function (path) {
+            E(path);
             // TODO:
             return false;
         },
@@ -118,6 +122,7 @@ define(["FSClass","assert","PathUtil","extend","Content"],
             return fs.statSync(np);
         },
         mkdir: function(path, options) {
+            options=options||{};
             assert.is(arguments,[P.Absolute]);
             if (this.exists(path)){
                 if (this.isDir(path)) {
@@ -163,6 +168,7 @@ define(["FSClass","assert","PathUtil","extend","Content"],
         // mv: is Difficult, should check dst.fs==src.fs
         //     and both have not subFileSystems
         exists: function (path, options) {
+            options=options||{};
             var np=this.toNativePath(path);
             return fs.existsSync(np);
         },
