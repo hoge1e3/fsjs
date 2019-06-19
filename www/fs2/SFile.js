@@ -244,6 +244,8 @@ SFile.prototype={
         if (this.isDir()) {
             throw new Error("Cannot write to directory: "+this.path());
         }
+        // why setContentAsync? AsyncでもDU.resolveはsyncをサポートしていればsyncでやってくれる...はず，Promiseだと遅延するからだめ．今までJQばっかりだったから問題が起きていなかった．
+        // なので，fs2/promise.jsを追加．
         return this.act.fs.setContentAsync(this.act.path,c);
     },
 

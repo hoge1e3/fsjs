@@ -1,10 +1,13 @@
-define(["FSClass","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","RootFS","Content","zip","DeferredUtil"],
-        function (FSClass,NativeFS,LSFS,WebFS, P,Env,A,SFile,RootFS,Content,zip,DU) {
+define(["FSClass","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile","RootFS","Content","zip","DeferredUtil","promise"],
+        function (FSClass,NativeFS,LSFS,WebFS, P,Env,A,SFile,RootFS,Content,zip,DU,PR) {
     var FS={};
     FS.assert=A;
     FS.Content=Content;
     FS.Class=FSClass;
     FS.DeferredUtil=DU;
+    if (!DU.config.useJQ) {
+        DU.external.Promise=PR;
+    }
     FS.Env=Env;
     FS.LSFS=LSFS;
     FS.NativeFS=NativeFS;

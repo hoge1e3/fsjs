@@ -12,7 +12,7 @@ var reqConf={
             "wget":"../fstools/wget",
             "DragDrop":"../fstools/DragDrop",
             "source-map":"../lib/source-map",
-            "promise": "../lib/promise",
+            //"promise": "../lib/promise",
 	        worker: "../worker/worker",//ADD
        		workerProxy: "../worker/proxy",//ADD
             WorkerRevProxy: "../worker/WorkerRevProxy", //ADD
