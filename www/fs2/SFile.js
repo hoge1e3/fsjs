@@ -543,6 +543,21 @@ SFile.prototype={
             reader.readAsArrayBuffer(blob);
         });
     },
+    size: function (f) {
+        if (!f) {
+            if (!this.isDir()) {
+                return this.getBytes().byteLength;
+            } else {
+                var sum=0;
+                this.each(function (f) {
+                    sum+=f.size();
+                });
+                return sum;
+            }
+        } else {
+            //TODO: async
+        }
+    },
     download: function () {
         if (this.isDir()) throw new Error(this+": Download dir is not support yet. Use 'zip' instead.");
         saveAs(this.getBlob(),this.name());;

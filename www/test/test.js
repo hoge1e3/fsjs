@@ -309,6 +309,8 @@ try{
             assert(testd.rel("sub/").exists());
             assert(testd.rel("sub/test2.txt").text()===romd.rel("Actor.tonyu").text() );
             chkRecur(testd,{},"test.txt,sub/test2.txt");
+            console.log("testd.size",testd.size());
+            assert.eq(testd.size(),ABCD.length+testd.rel("sub/test2.txt").size(),"testd.size");
             assert.eq(testd.ls().join(","), "test.txt,sub/");
             chkRecur(testd,{excludes:["sub/"]}, "test.txt");
             testd.rel("test.txt").rm();
