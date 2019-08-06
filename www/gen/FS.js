@@ -1210,7 +1210,7 @@ return {
 * License : https://github.com/eligrey/FileSaver.js/blob/master/LICENSE.md (MIT)
 * source  : http://purl.eligrey.com/github/FileSaver.js
 */
-
+define('FileSaver',[],function (){
 
 // The one and only way of getting global scope in all environments
 // https://stackoverflow.com/q/3277182/1008999
@@ -1365,8 +1365,8 @@ _global.saveAs = saveAs.saveAs = saveAs
 if (typeof module !== 'undefined') {
   module.exports = saveAs;
 }
-;
-define("FileSaver", function(){});
+return saveAs;
+});
 
 define('Content',["assert","Util","FileSaver"],function (assert,Util,saveAs) {
     var Content=function () {};
