@@ -47,6 +47,9 @@ try{
     assert( root.rel("a/b/c/").relPath("/a/b/e/f")==="../../c/");
     // ext()
     assert.eq(P.ext("test.txt"),".txt");
+    assert.eq(P.normalize("c:\\hoge/fuga\\piyo//"),"c:/hoge/fuga/piyo/");
+    assert(P.isChildOf("c:\\hoge/fuga\\piyo//","c:\\hoge\\fuga/"),"isChildOf");
+    assert(!P.isChildOf("c:\\hoge/fuga\\piyo//","c:\\hoge\\fugo/"),"!isChildOf");
     testContent();
     var nfs;
     if (NativeFS.available)  {

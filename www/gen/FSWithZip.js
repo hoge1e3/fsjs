@@ -337,6 +337,12 @@ PathUtil={
     AbsDir:AbsDir,
     SEP: SEP,
     endsWith: endsWith, startsWith:startsWith,
+    isChildOf: function(child, parent) {
+        return this.startsWith( this.normalize(child), this.normalize(parent));
+    },
+    normalize: function (path) {
+        return this.fixSep(path,"/").replace(/\/+$/,"/");
+    },
     hasDriveLetter: function (path) {
         return driveLetter.exec(path);
     },
