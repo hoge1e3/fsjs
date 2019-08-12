@@ -3172,7 +3172,7 @@ define([], function () {
             notifyChanged: function (path, metaInfo) {
                 if (!this.observers) return;
                 this.observers.forEach(function (ob) {
-                    if (P.startsWith(path, ob.path)) {
+                    if (P.isChildOf(path, ob.path)) {
                         ob.handler(path, metaInfo);
                     }
                 });
