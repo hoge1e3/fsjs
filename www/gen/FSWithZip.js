@@ -884,6 +884,11 @@ function (extend, P, M,assert,DU){
             // succ : [type],
             stub("getContent");
         },
+        size: function (path) {
+            var c=this.getContent(path,{type:ArrayBuffer});
+            var l=c.toBin().byteLength;
+            return l;
+        },
         getContentAsync: function (path, options) {
             if (!this.supportsSync()) stub("getContentAsync");
             return DU.resolve(this.getContent.apply(this,arguments));
@@ -1790,6 +1795,11 @@ define('NativeFS',["FSClass","assert","PathUtil","extend","Content"],
             } else {*/
                 return Content.bin( fs.readFileSync(np) , this.getContentType(path));
             //}
+        },
+        size: function(path) {
+            var np=this.toNativePath(path);
+            var st=fs.statSync(np);
+            return st.size;
         },
         setContent: function (path,content) {
             A.is(arguments,[P.Absolute,Content]);
@@ -3016,7 +3026,8 @@ SFile.prototype={
     size: function (f) {
         if (!f) {
             if (!this.isDir()) {
-                return this.getBytes().byteLength;
+                return this.act.fs.size(this.act.path);
+                //return this.getBytes().byteLength;
             } else {
                 var sum=0;
                 this.each(function (f) {
