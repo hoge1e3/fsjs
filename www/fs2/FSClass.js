@@ -61,6 +61,11 @@ function (extend, P, M,assert,DU){
             // succ : [type],
             stub("getContent");
         },
+        size: function (path) {
+            var c=this.getContent(path,{type:ArrayBuffer});
+            var l=c.toBin().byteLength;
+            return l;
+        },
         getContentAsync: function (path, options) {
             if (!this.supportsSync()) stub("getContentAsync");
             return DU.resolve(this.getContent.apply(this,arguments));

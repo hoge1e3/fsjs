@@ -546,7 +546,8 @@ SFile.prototype={
     size: function (f) {
         if (!f) {
             if (!this.isDir()) {
-                return this.getBytes().byteLength;
+                return this.act.fs.size(this.act.path);
+                //return this.getBytes().byteLength;
             } else {
                 var sum=0;
                 this.each(function (f) {

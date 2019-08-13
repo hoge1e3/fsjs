@@ -75,6 +75,11 @@ define(["FSClass","assert","PathUtil","extend","Content"],
                 return Content.bin( fs.readFileSync(np) , this.getContentType(path));
             //}
         },
+        size: function(path) {
+            var np=this.toNativePath(path);
+            var st=fs.statSync(np);
+            return st.size;
+        },
         setContent: function (path,content) {
             A.is(arguments,[P.Absolute,Content]);
             var pa=P.up(path);
