@@ -1,12 +1,12 @@
-define(["Shell","UI","FS","Util","DragDrop","ShellParser","DeferredUtil"], 
-function (shParent,UI,FS,Util,DragDrop,shp,DU) {
+define(["Shell","UI","FSFromRoot","Util","DragDrop","ShellParser","DeferredUtil","root"],
+function (shParent,UI,FS,Util,DragDrop,shp,DU,root) {
     var res={};
     var sh=shParent.clone();
     res.show=function (dir) {
         var d=res.embed(dir);
         d.dialog({width:600,height:500});
     };
-    res.embed=function (dir) {
+    res.embed=function (/*dir*/) {
         if (!res.d) {
             res.d=UI("div",{title:"Shell"},["div",{$var:"inner"},"Type 'help' to show commands.",["br"]]);
             res.inner=res.d.$vars.inner;
@@ -82,9 +82,10 @@ function (shParent,UI,FS,Util,DragDrop,shp,DU) {
                             });
                             table.appendTo(out);
                         } else {
+                            var jso;
                             try {
                                 jso=JSON.stringify(sres);
-                            } catch(e) {jso="[Object]"};
+                            } catch(e) {jso="[Object]";}
                             out.append(jso);
                         }
                     } else {
@@ -157,7 +158,7 @@ function (shParent,UI,FS,Util,DragDrop,shp,DU) {
         console.log(a,b,options);
     };
     var oldcat=sh.cat;
-    sh.cat=function (file,options) {
+    sh.cat=function (file) {
         file=sh.resolve(file, true);
         if (file.contentType().match(/^image\//)) {
             return file.getContent(function (c) {
@@ -175,11 +176,11 @@ function (shParent,UI,FS,Util,DragDrop,shp,DU) {
         DragDrop.accept(ui,cwd,{
             onComplete: function (status) {
                 for (var i in status) {
-                   ui.append(UI("div",i," ",status[i].status, 
+                   ui.append(UI("div",i," ",status[i].status,
                    status[i].redirectedTo? "Redirected to "+
                    status[i].redirectedTo.name() : "") );
                 }
-            } 
+            }
         });
         this.echo(ui);
     };
@@ -192,7 +193,7 @@ function (shParent,UI,FS,Util,DragDrop,shp,DU) {
             if (options.f) {
                 a=a.map(function(e) {
                     return t.resolve(e).getURL()+
-                    (options.r? "?"+Math.floor(Math.random()*1000):""); 
+                    (options.r? "?"+Math.floor(Math.random()*1000):"");
                 });
                 //console.log(a);
                 //return;
@@ -201,7 +202,7 @@ function (shParent,UI,FS,Util,DragDrop,shp,DU) {
         return DU.callbackToPromise(function (succ,err) {
             //console.log("reqjs",a);
             try {
-                return requirejs(a,succ);
+                return root.requirejs(a,succ);
             }catch(e){
                 err(e);
             }

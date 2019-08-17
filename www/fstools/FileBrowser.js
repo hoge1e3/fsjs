@@ -1,4 +1,4 @@
-define(["Shell","FS","DeferredUtil","UI"],function (sh,FS,DU,UI) {
+define(["Shell","FSFromRoot","DeferredUtil","UI"],function (sh,FS,DU,UI) {
     var res={
         show:function (dir,options) {
             this.options=options||{};
@@ -59,8 +59,8 @@ define(["Shell","FS","DeferredUtil","UI"],function (sh,FS,DU,UI) {
                         t.open(d.up());
                     }}
                 },"[UP]");
+                t.fileList.append(option);
             }
-            t.fileList.append(option);
             return d.each(function (f) {
                 var option=UI("option",{
                     value:f.path(),

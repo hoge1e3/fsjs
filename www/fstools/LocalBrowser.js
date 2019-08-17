@@ -1,4 +1,4 @@
-define(["Shell", "FS","DeferredUtil","UI","source-map"],
+define(["Shell", "FSFromRoot","DeferredUtil","UI","source-map"],
 function (sh,FS,DU,UI,S) {
     var LocalBrowser={};
     var F=DU.tr;
@@ -7,7 +7,7 @@ function (sh,FS,DU,UI,S) {
         this.iframeArea=dom;//=UI("iframe");
     };
     var singletonTag={body:1,head:1};
-    p=LocalBrowser.prototype;
+    var p=LocalBrowser.prototype;
     p.close=function () {
         $(this.iframeArea).empty();
     };
@@ -24,12 +24,12 @@ function (sh,FS,DU,UI,S) {
         if (this.iframe) this.iframe.focus();
     };
     var urlparam=/\?.*$/;
-    p.open=function (f,options) {    
+    p.open=function (f,options) {
         options=options||{};
         var onload=options.onload || function () {};
         var onerror=options.onerror || function () {};
         delete options.onload;
-        var dp=new DOMParser;
+        var dp=new DOMParser();
         var src=dp.parseFromString(f.text(),"text/html");
         if (options.onparse) {
             src=options.onparse(src,document);
@@ -161,7 +161,7 @@ function (sh,FS,DU,UI,S) {
                 idoc.write("\n");
             };*/
             return $.when().then(F(function () {
-                return appendTo(src.getElementsByTagName("html")[0], 
+                return appendTo(src.getElementsByTagName("html")[0],
                 idoc.getElementsByTagName("html")[0]);
             })).then(F(function () {
                 onload.apply(i[0],[]);
@@ -187,20 +187,20 @@ function (sh,FS,DU,UI,S) {
                         names.push(at[j].name);
                     }
                     var idx=names.indexOf("charset");
-                    if (idx>=0) { 
-                        names.splice(idx,1); 
-                        names.unshift("charset"); 
+                    if (idx>=0) {
+                        names.splice(idx,1);
+                        names.unshift("charset");
                     }
                     names.forEach(function (name) {
                         var value=n.getAttribute(name);
-                        if (n.tagName.toLowerCase()=="a" && name=="href" && 
+                        if (n.tagName.toLowerCase()=="a" && name=="href" &&
                         FS.PathUtil.isRelativePath(value)) {
                             value="javascript:LocalBrowserInfo.open('"+value+"');";
                         }
                         if (name=="src") {
                             value=iwin.LocalBrowserInfo.convertURL(value);
                             if (n.tagName.toLowerCase()=="script") {
-                                d=new $.Deferred;
+                                d=new $.Deferred();
                                 nn.onload = nn.onreadystatechange = function() {
                                     d.resolve(i+1);
                                 };
@@ -238,7 +238,7 @@ function (sh,FS,DU,UI,S) {
         return navigator.userAgent.indexOf("Firefox")>=0;
     }
     function iframeSrcURL(){
-        var src="<!DOCTYPE HTML><html><head></head><body></body></html>";        
+        var src="<!DOCTYPE HTML><html><head></head><body></body></html>";
         var blob = new Blob([src], {type: "text/html"});
         var url = URL.createObjectURL(blob);
         return url;
@@ -255,12 +255,12 @@ function (sh,FS,DU,UI,S) {
     };
     if (typeof sh=="object") sh.browser=function (f,options) {
         f=this.resolve(f,true);
-        var d=new $.Deferred;
+        var d=new $.Deferred();
         var place=$("<div>");
         this.echo(place);
         var ifrm=new LocalBrowser(place,options);
         ifrm.open(f,{onload:function () {
-            d.resolve();            
+            d.resolve();
         },onerror:function (e) {
             d.reject(e);
         }});

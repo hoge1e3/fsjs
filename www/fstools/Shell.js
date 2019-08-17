@@ -1,6 +1,8 @@
-define(["FS","assert"],
-        function (FS,assert) {
+/*global process, require*/
+define(["FSFromRoot","assert","root"],
+        function (FS,assert,root) {
     var Shell={};
+    var sh;
     var PathUtil=assert(FS.PathUtil);
     Shell.newCommand=function (name,func) {
         this[name]=func;
@@ -33,7 +35,7 @@ define(["FS","assert"],
         t.forEach(function (fs) {
             sh.echo(fs.fstype()+"\t"+(fs.mountPoint||"<Default>"));
         });
-    }
+    };
     Shell.resolve=resolve;
     function resolve(v, mustExist) {
         var r=resolve2(v);
@@ -99,13 +101,13 @@ define(["FS","assert"],
             return 1;
         }
     };
-    Shell.mkdir=function (file,options) {
+    Shell.mkdir=function (file/*,options*/) {
         file=resolve(file, false);
         if (file.exists()) throw new Error(file+" : exists");
         return file.mkdir();
 
     };
-    Shell.cat=function (file,options) {
+    Shell.cat=function (file/*,options*/) {
         file=resolve(file, true);
         return Shell.echo(file.getContent(function (c) {
             if (file.isText()) {
@@ -175,7 +177,8 @@ define(["FS","assert"],
     };
     Shell.get=Shell.getvar;
     Shell.set=function (k,v) {
-        return this.vars[k]=v;
+        this.vars[k]=v;
+        return v;
     };
     Shell.strcat=function () {
         if (arguments.length==1) return arguments[0];
@@ -218,9 +221,10 @@ define(["FS","assert"],
             }
         }
     };
-    if (!window.sh) window.sh=Shell;
+    if (!root.sh) root.sh=Shell;
+    sh=Shell;
     if (typeof process=="object") {
-        sh.devtool=function () { require('nw.gui').Window.get().showDevTools();}
+        sh.devtool=function () { require('nw.gui').Window.get().showDevTools();};
         sh.cd(process.cwd().replace(/\\/g,"/"));
     } else {
         sh.cd("/");

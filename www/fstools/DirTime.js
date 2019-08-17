@@ -1,4 +1,5 @@
-requirejs(["FS","PathUtil","Shell"],function (f,p,sh) {
+/*global requirejs*/
+requirejs(["PathUtil","Shell"],function (p,sh) {
     sh.dirTime=function (f) {
         f=this.resolve(f);
         var t=this;

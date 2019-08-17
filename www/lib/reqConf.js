@@ -11,7 +11,9 @@ var reqConf={
             "ShellParser":"../fstools/ShellParser",
             "wget":"../fstools/wget",
             "DragDrop":"../fstools/DragDrop",
+            "FSFromRoot":"../fstools/FSFromRoot",
             "source-map":"../lib/source-map",
+            "root":"../lib/root",
             //"promise": "../lib/promise",
 	        worker: "../worker/worker",//ADD
        		workerProxy: "../worker/proxy",//ADD

@@ -1,4 +1,4 @@
-define(["Shell","FS"],function (sh,FS) {
+define(["Shell","FSFromRoot"],function (sh,FS) {
     /*sh.wget=function (url,options) {
         var dst=this.resolve(FS.PathUtil.name(url));
         sh.echo("Getting ",url,"...");
@@ -13,12 +13,12 @@ define(["Shell","FS"],function (sh,FS) {
         this.echo("Getting ",url," -> ",dst);
         return wget(url,dst,options);
     };
-    function wget(url,dst,options) {    
+    function wget(url,dst/*,options*/) {
         var oReq = new XMLHttpRequest();
         oReq.open("GET", url, true);
         oReq.responseType = "arraybuffer";
-        var d=new $.Deferred;
-        oReq.onload = function (oEvent) {
+        var d=new $.Deferred();
+        oReq.onload = function () {
             var arrayBuffer = oReq.response; // Note: not oReq.responseText
             if (arrayBuffer) {
                 dst.bytes(arrayBuffer);

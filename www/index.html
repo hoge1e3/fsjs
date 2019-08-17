@@ -13,11 +13,13 @@
 <link rel="stylesheet" href="css/jquery-ui.css">
 <script>
 requirejs.config(reqConf);
-requirejs(["ShellUI","wget","LocalBrowser","FileBrowser"], function(shui,wget,lcb,fb){
-    onerror=function (a,b,c,d,e) {
-        if (e) shui.sh.err(e.stack);
-    };
-    shui.show();
+requirejs(["FS"],function (FS) {
+    requirejs(["ShellUI","wget","LocalBrowser","FileBrowser"], function(shui,wget,lcb,fb){
+        onerror=function (a,b,c,d,e) {
+            if (e) shui.sh.err(e.stack);
+        };
+        shui.show();
+    });
 });
 
 </script>

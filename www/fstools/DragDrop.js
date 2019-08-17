@@ -1,11 +1,12 @@
-define(["FS"],function (FS) {
+define(["FSFromRoot","root"],function (FS,root) {
     var DU=FS.DeferredUtil;
     var SFile=FS.SFile;
-    DragDrop={};
+    var DragDrop={};
+    root.DragDrop=DragDrop;
     DragDrop.readFile=function (file) {
         return DU.promise(function (succ) {
             var reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function() {
                 //var fileContent = reader.result;
                 //console.log("SUCC",reader);
                 succ(reader);
@@ -44,7 +45,7 @@ define(["FS"],function (FS) {
             e.stopPropagation();
             e.preventDefault();
             var files = Array.prototype.slice.call(eo.dataTransfer.files);
-            var added=[],cnt=files.length;
+            //var added=[],cnt=files.length;
             DU.each(files,function (file) {
                 var itemName=file.name;
                 var itemFile=dst.rel(itemName),actFile;

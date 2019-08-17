@@ -1,6 +1,6 @@
 define(["Shell","DeferredUtil"],function (sh,DU) {
     var envMulti=/\$\{([^\}]*)\}/;
-    var envSingle=/^\$\{([^\}]*)\}$/;
+    //var envSingle=/^\$\{([^\}]*)\}$/;
     var F=DU.throwF;
     sh.enterCommand=function (s) {
         if (!this._history) this._history=[];
@@ -175,7 +175,7 @@ define(["Shell","DeferredUtil"],function (sh,DU) {
             }));
         } else {
             return expr;
-        }   
+        }
     };
     sh.calc=function (op) {
         var i=1;
@@ -188,7 +188,7 @@ define(["Shell","DeferredUtil"],function (sh,DU) {
                 case "mul":r*=parseFloat(b);break;
                 case "div":r/=parseFloat(b);break;
                 case "lt":r=(r<b);break;
-            }     
+            }
         }
         this.set("_",r);
         return r;
@@ -196,7 +196,7 @@ define(["Shell","DeferredUtil"],function (sh,DU) {
     sh.history=function () {
         var t=this;
         this._history.forEach(function (e) {
-            t.echo(e);    
+            t.echo(e);
         });
     };
 });
