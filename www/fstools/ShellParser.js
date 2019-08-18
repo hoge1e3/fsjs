@@ -1,4 +1,5 @@
-define(["Shell","DeferredUtil"],function (sh,DU) {
+define(["Shell","FSFromRoot"],function (sh,FS) {
+    var DU=FS.DeferredUtil;
     var envMulti=/\$\{([^\}]*)\}/;
     //var envSingle=/^\$\{([^\}]*)\}$/;
     var F=DU.throwF;

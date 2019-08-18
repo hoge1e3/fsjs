@@ -1,5 +1,6 @@
-define(["Shell","UI","FSFromRoot","Util","DragDrop","ShellParser","DeferredUtil","root"],
-function (shParent,UI,FS,Util,DragDrop,shp,DU,root) {
+define(["Shell","UI","FSFromRoot","Util","DragDrop","ShellParser","root"],
+function (shParent,UI,FS,Util,DragDrop,shp,root) {
+    var DU=FS.DeferredUtil;
     var res={};
     var sh=shParent.clone();
     res.show=function (dir) {
@@ -208,6 +209,6 @@ function (shParent,UI,FS,Util,DragDrop,shp,DU,root) {
             }
         });
     };
-
+    res.UI=UI;
     return res;
 });

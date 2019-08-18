@@ -1,4 +1,5 @@
-define(["Shell","FSFromRoot","DeferredUtil","UI"],function (sh,FS,DU,UI) {
+define(["Shell","FSFromRoot","UI"],function (sh,FS,UI) {
+    var DU=FS.DeferredUtil;
     var res={
         show:function (dir,options) {
             this.options=options||{};

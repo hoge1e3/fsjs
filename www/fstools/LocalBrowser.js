@@ -1,5 +1,6 @@
-define(["Shell", "FSFromRoot","DeferredUtil","UI","source-map"],
-function (sh,FS,DU,UI,S) {
+define(["Shell", "FSFromRoot","UI","source-map"],
+function (sh,FS,UI,S) {
+    var DU=FS.DeferredUtil;
     var LocalBrowser={};
     var F=DU.tr;
     LocalBrowser=function (dom,options) {
