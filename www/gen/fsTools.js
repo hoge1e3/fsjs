@@ -1334,7 +1334,7 @@ function (shParent,UI,FS,Util,DragDrop,shp,root) {
             }
         });
     };
-
+    res.UI=UI;
     return res;
 });
 

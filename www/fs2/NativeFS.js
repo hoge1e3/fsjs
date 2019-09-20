@@ -1,16 +1,14 @@
-/*global require, requirejs, process, Buffer*/
+/*global process, global, Buffer*/
 define(["FSClass","assert","PathUtil","extend","Content"],
         function (FS,A,P,extend,Content) {
-    var available=(typeof process=="object"/* && process.__node_webkit*/);
-    if (!available) {
+    var assert=A,fs;
+    try {
+        fs=global.require("fs");
+        fs.existsSync('test.txt');
+    }catch(e){
         return function () {
             throw new Error("This system not support native FS");
         };
-    }
-    var assert=A;
-    var fs=require("fs");
-    if (!fs) {
-        fs=requirejs.nodeRequire("fs");
     }
     var NativeFS=function (rootPoint) {
         if (rootPoint) {

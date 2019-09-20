@@ -1715,18 +1715,17 @@ define([], function () {
         return Content;
     });
 
-    /*global require, requirejs, process, Buffer*/
+    /*global process, global, Buffer*/
     define('NativeFS', ["FSClass", "assert", "PathUtil", "extend", "Content"], function (FS, A, P, extend, Content) {
-        var available = typeof process == "object" /* && process.__node_webkit*/;
-        if (!available) {
+        var assert = A,
+            fs;
+        try {
+            fs = global.require("fs");
+            fs.existsSync('test.txt');
+        } catch (e) {
             return function () {
                 throw new Error("This system not support native FS");
             };
-        }
-        var assert = A;
-        var fs = require("fs");
-        if (!fs) {
-            fs = requirejs.nodeRequire("fs");
         }
         var NativeFS = function (rootPoint) {
             if (rootPoint) {
@@ -3646,12 +3645,13 @@ define([], function () {
         FS.init = function (fs) {
             if (rootFS) return;
             if (!fs) {
-                if (typeof process == "object") {
+                if (NativeFS.available) {
                     fs = new NativeFS();
                 } else if (typeof localStorage === "object") {
                     fs = new LSFS(localStorage);
                 } else if (typeof importScripts === "function") {
                     // Worker
+                    /* global self*/
                     self.addEventListener("message", function (e) {
                         var data = e.data;
                         if (typeof data === "string") {

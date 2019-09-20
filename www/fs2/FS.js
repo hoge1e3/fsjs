@@ -48,12 +48,13 @@ define(["FSClass","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile",
     FS.init=function (fs) {
         if (rootFS) return;
         if (!fs) {
-            if (typeof process=="object") {
+            if (NativeFS.available) {
                 fs=new NativeFS();
             } else if (typeof localStorage==="object") {
                 fs=new LSFS(localStorage);
             } else if (typeof importScripts==="function") {
                 // Worker
+                /* global self*/
                 self.addEventListener("message", function (e) {
                     var data=e.data;
                     if (typeof data==="string") {
