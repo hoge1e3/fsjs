@@ -1719,14 +1719,21 @@ define('Content',["assert","Util","FileSaver"],function (assert,Util,saveAs) {
     return Content;
 });
 
-/*global process, global, Buffer*/
+/*global process, global, Buffer, requirejs, require*/
 define('NativeFS',["FSClass","assert","PathUtil","extend","Content"],
         function (FS,A,P,extend,Content) {
     var assert=A,fs;
-    try {
-        fs=global.require("fs");
-        fs.existsSync('test.txt');
-    }catch(e){
+    const requireTries=[
+        ()=>require("fs"),()=>requirejs.nodeRequire("fs"),()=>global.require("fs")
+    ];
+    for (let fsf of requireTries) {
+        try {
+            fs=fsf();
+            fs.existsSync('test.txt');
+            break;
+        } catch(e){}
+    }
+    if (!fs) {
         return function () {
             throw new Error("This system not support native FS");
         };
