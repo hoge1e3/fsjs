@@ -9,8 +9,9 @@ define(["FSClass","assert","PathUtil","extend","Content"],
         try {
             fs=fsf();
             fs.existsSync('test.txt');
+            process.cwd();// fails here in NW.js Worker( fs is OK, process is absent)
             break;
-        } catch(e){}
+        } catch(e){fs=null;}
     }
     if (!fs) {
         return function () {

@@ -1,8 +1,10 @@
 // This is kowareta! because r.js does not generate module name:
 //   define("FSLib",[], function () { ...
-//(function (global) {
-//var useGlobal=(typeof global.define!="function");
-//var define=(useGlobal ? define=function(_,f){f();} : global.define);
+/*
+(function (d,f) {
+module.exports=f();
+})
+*/
 define([],function () {
     var define,requirejs;
 	var R={};
@@ -1730,8 +1732,9 @@ define('NativeFS',["FSClass","assert","PathUtil","extend","Content"],
         try {
             fs=fsf();
             fs.existsSync('test.txt');
+            process.cwd();
             break;
-        } catch(e){}
+        } catch(e){fs=null;}
     }
     if (!fs) {
         return function () {
