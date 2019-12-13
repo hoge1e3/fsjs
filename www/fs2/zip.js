@@ -28,7 +28,7 @@ function (SFile,/*JSZip,*/fsv,Util,DU) {
                         });
                     }
                 });
-            });
+            },options);
         }
         return loop(jszip, dir).then(function () {
             return DU.resolve(jszip.generateAsync({

@@ -1732,7 +1732,7 @@ define('NativeFS',["FSClass","assert","PathUtil","extend","Content"],
         try {
             fs=fsf();
             fs.existsSync('test.txt');
-            process.cwd();
+            process.cwd();// fails here in NW.js Worker( fs is OK, process is absent)
             break;
         } catch(e){fs=null;}
     }
@@ -2491,14 +2491,9 @@ function (extend,A,P,Util,Content,FSClass,saveAs,DU) {
 
 var SFile=function (rootFS, path) {
     A.is(path, P.Absolute);
-    //A(fs && fs.getReturnTypes, fs);
     this._path=path;
     this.rootFS=rootFS;
     this.fs=rootFS.resolveFS(path);
-    /*this.act={};// path/fs after follwed symlink
-    this.act.path=this.fs.resolveLink(path);
-    this.act.fs=rootFS.resolveFS(this.act.path);
-    A.is(this.act, {fs:FSClass, path:P.Absolute});*/
     if (this.isDir() && !P.isDir(path)) {
         this._path+=P.SEP;
     }
@@ -2506,14 +2501,14 @@ var SFile=function (rootFS, path) {
 SFile.is=function (path) {
     return path && typeof (path.isSFile)=="function" && path.isSFile();
 };
-function getPath(f) {
+/*function getPath(f) {
     if (SFile.is(f)) {
         return f.path();
     } else {
         A.is(f,P.Absolute);
         return f;
     }
-}
+}*/
 SFile.prototype={
     isSFile: function (){return true;},
     setPolicy: function (p) {
@@ -2521,7 +2516,7 @@ SFile.prototype={
         this.policy=p;
         return this._clone();
     },
-    getPolicy: function (p) {
+    getPolicy: function (/*p*/) {
         return this.policy;
     },
     _clone: function (){
@@ -2706,12 +2701,12 @@ SFile.prototype={
         if (ct!==null && !ct.match(/^text/) && Content.looksLikeDataURL(t)) {
             // bad knowhow: if this is a binary file apparently, convert to URL
             return DU.throwNowIfRejected(this.setContent(Content.url(t)));
-            return DU.resolve(this.act.fs.setContent(this.act.path, Content.url(t)));
+            //return DU.resolve(this.act.fs.setContent(this.act.path, Content.url(t)));
         } else {
             // if use fs.setContentAsync, the error should be handled by .fail
             // setText should throw error immediately (Why? maybe old style of text("foo") did it so...)
             return DU.throwNowIfRejected(this.setContent(Content.plainText(t)));
-            return DU.resolve(this.act.fs.setContent(this.act.path, Content.plainText(t)));
+            //return DU.resolve(this.act.fs.setContent(this.act.path, Content.plainText(t)));
         }
     },
     appendText:function (t) {
@@ -2739,15 +2734,10 @@ SFile.prototype={
 
     getText:function (f) {
     	if (typeof f==="function") {
-    		var t=this;
+    		//var t=this;
     	    return this.getContent(forceText).then(f);
     	}
         return forceText(this.act.fs.getContent(this.act.path));
-        /*if (this.isText()) {
-            return this.act.fs.getContent(this.act.path).toPlainText();
-        } else {
-            return this.act.fs.getContent(this.act.path).toURL();
-        }*/
         function forceText(c) {
 	    	//if (t.isText()) {
             try {
@@ -2819,7 +2809,7 @@ SFile.prototype={
     copyTo: function (dst, options) {
         A(dst && dst.isSFile(),dst+" is not a file");
         var src=this;
-        var options=options||{};
+        options=options||{};
         var srcIsDir=src.isDir();
         var dstIsDir=dst.isDir();
         if (!srcIsDir && dstIsDir) {
@@ -2850,7 +2840,7 @@ SFile.prototype={
                 return DU.resolve(r).then(function () {
                     return dstf.copyFrom(s, options);
                 });
-            });
+            },options);
         }
         //file.text(src.text());
         //if (options.a) file.metaInfo(src.metaInfo());
@@ -2877,14 +2867,6 @@ SFile.prototype={
         A.is(this.path(),P.Dir);
         return this;
     },
-    /*files:function (f,options) {
-        var dir=this.assertDir();
-        var res=[];
-        this.each(function (f) {
-            res.add(f);
-        },options);
-        return res;
-    },*/
     each:function (f,options) {
         var dir=this.assertDir();
         return dir.listFilesAsync(options).then(function (ls) {
@@ -2908,7 +2890,7 @@ SFile.prototype={
     _listFiles:function (options,async) {
         A(options==null || typeof options=="object");
         var dir=this.assertDir();
-        var path=this.path();
+        //var path=this.path();
         var ord;
         options=dir.convertOptions(options);
         if (!ord) ord=options.order;
@@ -2933,31 +2915,9 @@ SFile.prototype={
     },
     listFilesAsync:function (options) {
         return this._listFiles(options,true);
-        /*
-        A(options==null || typeof options=="object");
-        var dir=this.assertDir();
-        var path=this.path();
-        var ord;
-        options=dir.convertOptions(options);
-        if (!ord) ord=options.order;
-        return this.act.fs.opendirAsync(this.act.path, options).
-        then(function (di) {
-            var res=[];
-            for (var i=0;i<di.length; i++) {
-                var name=di[i];
-                //if (!options.includeTrashed && dinfo[i].trashed) continue;
-                var f=dir.rel(name);
-                if (options.excludesF(f) ) continue;
-                res.push(f);
-            }
-            if (typeof ord=="function" && res.sort) res.sort(ord);
-            return res;
-        });*/
     },
     listFiles:function (options) {
         return this._listFiles(options,false);
-        /*var args=Array.prototype.slice.call(arguments);
-        return DU.assertResolved(this.listFilesAsync.apply(this,args));*/
     },
     ls:function (options) {
         A(options==null || typeof options=="object");
@@ -2972,7 +2932,7 @@ SFile.prototype={
     },
     convertOptions:function(o) {
         var options=Util.extend({},o);
-        var dir=this.assertDir();
+        /*var dir=*/this.assertDir();
         var pathR=this.path();
         var excludes=options.excludes || {};
         if (typeof excludes==="function") {
@@ -3022,7 +2982,7 @@ SFile.prototype={
     },
     setBlob: function (blob) {
         var t=this;
-        return DU.promise(function (succ,err) {
+        return DU.promise(function (succ/*,err*/) {
             var reader = new FileReader();
             reader.addEventListener("loadend", function() {
                 // reader.result contains the contents of blob as a typed array
@@ -3049,7 +3009,7 @@ SFile.prototype={
     },
     download: function () {
         if (this.isDir()) throw new Error(this+": Download dir is not support yet. Use 'zip' instead.");
-        saveAs(this.getBlob(),this.name());;
+        saveAs(this.getBlob(),this.name());
     },
     err: function () {
         var a=Array.prototype.slice.call(arguments);
@@ -3065,9 +3025,9 @@ SFile.prototype={
         var req={base:base.path(),data:data};
         return req;
     },
-    importFromObject: function (data, options) {
+    importFromObject: function (data/*, options*/) {
         if (typeof data==="string") data=JSON.parse(data);
-        var data=data.data;
+        data=data.data;
         for (var k in data) {
             this.rel(k).text(data[k]);
         }
@@ -3230,7 +3190,7 @@ function (SFile,/*JSZip,*/fsv,Util,DU) {
                         });
                     }
                 });
-            });
+            },options);
         }
         return loop(jszip, dir).then(function () {
             return DU.resolve(jszip.generateAsync({

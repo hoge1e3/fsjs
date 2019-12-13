@@ -352,7 +352,7 @@ SFile.prototype={
                 return DU.resolve(r).then(function () {
                     return dstf.copyFrom(s, options);
                 });
-            });
+            },options);
         }
         //file.text(src.text());
         //if (options.a) file.metaInfo(src.metaInfo());
