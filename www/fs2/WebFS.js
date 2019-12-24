@@ -2,9 +2,9 @@ define(["FSClass","jquery.binarytransport","DeferredUtil","Content","PathUtil"],
         function (FS,j,DU,Content,P) {
     // FS.mount(location.protocol+"//"+location.host+"/", "web");
     var WebFS=function (){};
-    var p=WebFS.prototype=new FS;
+    var p=WebFS.prototype=new FS();
     FS.addFSType("web", function () {
-        return new WebFS;
+        return new WebFS();
     });
     p.fstype=function () {return "Web";};
     p.supportsSync=function () {return false;};

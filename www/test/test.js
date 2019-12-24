@@ -1,5 +1,6 @@
 //requirejs(["WebFS","LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS","Content","DeferredUtil","WorkerRevProxy","FSRevProxy"],
 //function (WebFS,LSFS, romk,assert,P,SFile, NativeFS,RootFS,Content,DU,WRP,FSRevProxy) {
+/*global requirejs*/
 requirejs(["FS","../test/ROM_k","WorkerRevProxy","FSRevProxy"],
 function (FS,romk,WRP,FSRevProxy) {
 try{
@@ -28,6 +29,7 @@ try{
     window.romk=romk;
     rootFS.mount("/rom/",romk);
     rootFS.mount("/ram/",LSFS.ramDisk());
+    rootFS.mount("http://localhost/",new WebFS());
     rootFS.get("/var/").mkdir();
     // check cannot mount which is already exists (別にできてもいいじゃん)
     /*assert.ensureError(function (){
@@ -53,6 +55,7 @@ try{
     testContent();
     var nfs;
     if (NativeFS.available)  {
+        /*global require*/
         require('nw.gui').Window.get().showDevTools();
         var nfsp="C:/bin/Dropbox/workspace/fsjs/fs/";//P.rel(PathUtil.directorify(process.cwd()), "fs/");
         console.log(nfsp);
@@ -62,6 +65,7 @@ try{
         nfs=root.rel("fs/");
     }
     var r=cd.ls();
+    console.log(r);
     var ABCD="abcd\nefg";
     var CDEF="defg\nてすと";
     //obsolate: ls does not enum mounted dirs
@@ -74,6 +78,7 @@ try{
     var testd;
     if (!testf.exists()) {
         console.log("Test pass",1);
+        testWebFS();
         testd=cd=cd.rel(/*Math.random()*/"testdir"+"/");
         console.log("Enter", cd);
         testd.mkdir();
@@ -95,7 +100,7 @@ try{
         testd.rel("sub/test2.txt").text(romd.rel("Actor.tonyu").text());
         chkrom();
         var tncnt=0;
-        romd.recursive(function (f) {
+        romd.recursive(function (/*f*/) {
             //console.log("ROM",tncnt,f.path());
             tncnt++;
         },{excludes:function (f){ return !f.isDir() && f.ext()!==".tonyu"; }});
@@ -103,7 +108,7 @@ try{
         assert.eq(tncnt,46,"tncnt");
         tncnt=0;
         var exdirs=["physics/","event/","graphics/"];
-        romd.recursive(function (f) {
+        romd.recursive(function (/*f*/) {
             tncnt++;
         },{excludes:exdirs});
         console.log("files in romd/ except",exdirs,tncnt);
@@ -171,6 +176,7 @@ try{
         testd.rel("test.txt").text(romd.rel("Actor.tonyu").text()+ABCD+CDEF);
         chkCpy(testd.rel("test.txt"));
         testd.rel("test.txt").text(ABCD);
+        //testEach(testd);
         //--- the big file
         var cap=LSFS.getCapacity();
         console.log("usage",cap);
@@ -192,13 +198,13 @@ try{
             for (var i=0;i<6;i++) bigDir.rel("test"+i+".txt").text(buf);
             bigDir.moveTo(bigDir2).then(
                 function () {alert("You cannot come here(move big)");},
-                function () {
-                    console.log("Successfully kowareta!(move big!)");
+                function (e) {
+                    console.log("Successfully kowareta!(move big!)",e);
                     return DU.resolve();
                 }
             ).then(function () {
                 for (var i=0;i<6;i++) assert(bigDir.rel("test"+i+".txt").exists());
-                assert(!bigDir2.exists(),"Bigdir2 remains");
+                assert(!bigDir2.exists(),"Bigdir2 ("+bigDir2.path()+") remains");
                 console.log("Bigdir removing");
                 bigDir.removeWithoutTrash({recursive:true});
                 bigDir2.removeWithoutTrash({recursive:true});
@@ -225,14 +231,16 @@ try{
         DU.each([1,2,3],function(i) {
             //return DU.timeout(1000).then(function ()  {
                 console.log("DU.EACH",i);
-                if (i==2) i.c.d;
+                var res;
+                if (i==2) res=i.c.d;
                 return i;
             //});
         }).fail(function (e) {console.log("DU.ERR",(e+"").replace(/\n.*/,""));});
         DU.each({a:1,b:2,c:3},function(k,v) {
             return DU.timeout(500).then(function ()  {
                 console.log("DU.EACH t/o",k,v);
-                if (v==2) v.c.d;
+                var res;
+                if (v==2) res=v.c.d;
                 return v;
             });
         }).fail(function (e) {console.log("DU.ERR",(e+"").replace(/\n.*/,""));});
@@ -263,12 +271,12 @@ try{
             function (r) {console.log("DU.TNIR",(r+"").replace(/\n.*/,""));}
         );
         DU.throwNowIfRejected(
-            DU.timeout(100).then(function (r) {
+            DU.timeout(100).then(function () {
                 return "OK";
             })
         ).then(
             function (r) {console.log("DU.TNIR",r);},
-            function (r) {alert("NO! 2");}
+            function () {alert("NO! 2");}
         );
         DU.throwNowIfRejected(
             DU.resolve(100).then(function (r) {
@@ -276,7 +284,7 @@ try{
             })
         ).then(
             function (r) {console.log("DU.TNIR",r);},
-            function (r) {alert("NO! 3");}
+            function () {alert("NO! 3");}
         );
         requirejs(["worker!testworker"],function (tw) {
             var con=new WRP(console);
@@ -354,6 +362,10 @@ try{
     }
     console.log(rootFS.get("/var/").ls());
     console.log(rootFS.get("/rom/").ls());
+}catch(e) {
+    console.log(e.stack);
+    alert(e);
+}
 
     function chkCpy(f) {
        var tmp=f.up().rel("tmp_"+f.name());
@@ -373,7 +385,7 @@ try{
        tmp.text("DUMMY");
 
        // url(bin->URL)->url(URL->bin)
-       var t=f.dataURL();
+       t=f.dataURL();
        tmp.dataURL(t);
        checkSame(f,tmp);
        tmp.text("DUMMY");
@@ -472,8 +484,21 @@ try{
            }
         }
     }
-}catch(e) {
-    console.log(e.stack);
-    alert(e);
-}
+    function testWebFS() {
+        rootFS.get("http://localhost/fsjs/test.html").text(function (r) {
+            console.log("WSF", r);
+            assert(r.indexOf("test/test")>=0, "WebFS get fail");
+        });
+    }
+    function testEach(dir) {
+        dir.each(function (f){
+            console.log("EACH", f.path());
+        });
+        assert.ensureError(function () {
+            dir.each(function (f){
+                console.log("EACH", f.path());
+                throw new Error("ERA-");
+            });
+        });
+    }
 });

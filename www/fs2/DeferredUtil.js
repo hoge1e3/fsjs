@@ -1,9 +1,4 @@
-define([], function () {
-    var root=(
-        typeof window!=="undefined" ? window :
-        typeof self!=="undefined" ? self :
-        typeof global!=="undefined" ? global : null
-    );
+define(["root"], function (root) {
     //  promise.then(S,F)  and promise.then(S).fail(F) is not same!
     //  ->  when fail on S,  F is executed?
     //   same is promise.then(S).then(same,F)
