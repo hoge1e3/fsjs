@@ -555,8 +555,33 @@ SFile.prototype={
         rfs.addObserver(this.path(),function (path, meta) {
             handler(meta.eventType, rfs.get(path),meta );
         });
+    },
+    convertResult:function (valueOrPromise) {
+        if (this.syncMode===true) return forceSync(valueOrPromise);
+        if (this.syncMode===false) return DU.resolve(valueOrPromise);
+        return valueOrPromise;
     }
 };
+function forceSync(promise) {
+    var state;
+    var err,res;
+    var np=DU.resolve(promise).then(function (r) {
+        if (!state) {
+            state="resolved";
+            res=r;
+        }
+        return r;
+    },function (e) {
+        if (!state) {
+            state="rejected";
+            err=e;
+        }
+        throw e;
+    });
+    if (!state) return np;
+    if (state==="rejected") throw err;
+    return res;
+}
 Object.defineProperty(SFile.prototype,"act",{
     get: function () {
         if (this._act) return this._act;
