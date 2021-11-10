@@ -543,8 +543,17 @@ define([], function () {
         };
     });
 
-    define('DeferredUtil', [], function () {
-        var root = typeof window !== "undefined" ? window : typeof self !== "undefined" ? self : typeof global !== "undefined" ? global : null;
+    /*global window,self,global*/
+    define('root', [], function () {
+        if (typeof window !== "undefined") return window;
+        if (typeof self !== "undefined") return self;
+        if (typeof global !== "undefined") return global;
+        return function () {
+            return this;
+        }();
+    });
+
+    define('DeferredUtil', ["root"], function (root) {
         //  promise.then(S,F)  and promise.then(S).fail(F) is not same!
         //  ->  when fail on S,  F is executed?
         //   same is promise.then(S).then(same,F)
@@ -2458,6 +2467,7 @@ define([], function () {
 
         return WebFS;
     });
+
     define('Env', ["assert", "PathUtil"], function (A, P) {
         var Env = function (value) {
             this.value = value;
@@ -3048,8 +3058,33 @@ define([], function () {
                 rfs.addObserver(this.path(), function (path, meta) {
                     handler(meta.eventType, rfs.get(path), meta);
                 });
+            },
+            convertResult: function (valueOrPromise) {
+                if (this.syncMode === true) return forceSync(valueOrPromise);
+                if (this.syncMode === false) return DU.resolve(valueOrPromise);
+                return valueOrPromise;
             }
         };
+        function forceSync(promise) {
+            var state;
+            var err, res;
+            var np = DU.resolve(promise).then(function (r) {
+                if (!state) {
+                    state = "resolved";
+                    res = r;
+                }
+                return r;
+            }, function (e) {
+                if (!state) {
+                    state = "rejected";
+                    err = e;
+                }
+                throw e;
+            });
+            if (!state) return np;
+            if (state === "rejected") throw err;
+            return res;
+        }
         Object.defineProperty(SFile.prototype, "act", {
             get: function () {
                 if (this._act) return this._act;
@@ -3612,12 +3647,20 @@ define([], function () {
                 return env.value;
             }
         };
+        FS.localStorageAvailable = function () {
+            try {
+                // Fails when Secret mode + iframe in other domain
+                return typeof localStorage === "object";
+            } catch (e) {
+                return false;
+            }
+        };
         FS.init = function (fs) {
             if (rootFS) return;
             if (!fs) {
                 if (NativeFS.available) {
                     fs = new NativeFS();
-                } else if (typeof localStorage === "object") {
+                } else if (FS.localStorageAvailable()) {
                     fs = new LSFS(localStorage);
                 } else if (typeof importScripts === "function") {
                     // Worker
@@ -3643,6 +3686,8 @@ define([], function () {
                                 break;
                         }
                     });
+                    fs = LSFS.ramDisk();
+                } else {
                     fs = LSFS.ramDisk();
                 }
             }
