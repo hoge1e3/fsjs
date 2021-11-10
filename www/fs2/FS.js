@@ -45,12 +45,20 @@ define(["FSClass","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile",
             return env.value;
         }
     };
+    FS.localStorageAvailable=function () {
+        try {
+            // Fails when Secret mode + iframe in other domain
+            return (typeof localStorage==="object");
+        } catch(e) {
+            return false;
+        }
+    };
     FS.init=function (fs) {
         if (rootFS) return;
         if (!fs) {
             if (NativeFS.available) {
                 fs=new NativeFS();
-            } else if (typeof localStorage==="object") {
+            } else if (FS.localStorageAvailable()) {
                 fs=new LSFS(localStorage);
             } else if (typeof importScripts==="function") {
                 // Worker
@@ -76,6 +84,8 @@ define(["FSClass","NativeFS","LSFS", "WebFS", "PathUtil","Env","assert","SFile",
                         break;
                     }
                 });
+                fs=LSFS.ramDisk();
+            } else {
                 fs=LSFS.ramDisk();
             }
         }
