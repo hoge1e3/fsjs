@@ -920,10 +920,9 @@ define([], function () {
                     return DU.resolve(t.setContent(path, content, options));
                 });
             },
-            appendContent: function (path, content, options) {
-                //var nc=this.getContent(path,options).toPlainText()+content.toPlainText();
-                //return this.setContent(path, Content.fromPlainText(nc) , options);
-                stub("");
+            appendContent: function (path, content) {
+                var c = this.getContent(path);
+                return this.setContent(path, c + content);
             },
             appendContentAsync: function (path, content, options) {
                 var t = this;
