@@ -921,7 +921,8 @@ define([], function () {
                 });
             },
             appendContent: function (path, content) {
-                var c = this.getContent(path);
+                var c = "";
+                if (this.exists(path)) c = this.getContent(path);
                 return this.setContent(path, c + content);
             },
             appendContentAsync: function (path, content, options) {
