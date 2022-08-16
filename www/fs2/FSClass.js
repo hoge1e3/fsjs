@@ -81,10 +81,8 @@ function (extend, P, M,assert,DU){
                 return DU.resolve(t.setContent(path,content,options));
             });
         },
-        appendContent: function (path,content) {
-            var c="";
-            if (this.exists(path)) c=this.getContent(path);
-            return this.setContent(path, c+content);
+        appendContent: function (/*path,content*/) {
+            stub("appendContent");
         },
         appendContentAsync: function (path, content, options) {
             var t=this;

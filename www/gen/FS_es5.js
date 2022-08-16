@@ -505,6 +505,8 @@ define([], function () {
             ".wav": "audio/x-wav",
             ".mp3": "audio/mp3",
             ".ogg": "audio/ogg",
+            ".flac": "audio/x-flac",
+            ".fla": "audio/x-flac",
             ".midi": "audio/midi",
             ".mid": "audio/midi",
             ".mzo": "audio/mzo",
@@ -920,10 +922,8 @@ define([], function () {
                     return DU.resolve(t.setContent(path, content, options));
                 });
             },
-            appendContent: function (path, content) {
-                var c = "";
-                if (this.exists(path)) c = this.getContent(path);
-                return this.setContent(path, c + content);
+            appendContent: function () /*path,content*/{
+                stub("appendContent");
             },
             appendContentAsync: function (path, content, options) {
                 var t = this;
@@ -2204,6 +2204,11 @@ define([], function () {
                     this.setItem(path, content.toURL());
                 }
                 this.touch(path);
+            },
+            appendContent: function (path, content) {
+                var c = "";
+                if (this.exists(path)) c = this.getContent(path).toPlainText();
+                return this.setContent(path, Content.plainText(c + content.toPlainText()));
             },
             getMetaInfo: function (path, options) {
                 this.assertExist(path, { includeTrashed: true });

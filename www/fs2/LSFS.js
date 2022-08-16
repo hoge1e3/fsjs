@@ -239,6 +239,11 @@ define(["FSClass","PathUtil","extend","assert","Util","Content"],
             }
             this.touch(path);
         },
+        appendContent: function (path,content) {
+            var c="";
+            if (this.exists(path)) c=this.getContent(path).toPlainText();
+            return this.setContent(path, Content.plainText(c+content.toPlainText()));
+        },
         getMetaInfo: function(path, options) {
             this.assertExist(path, {includeTrashed:true});
             assert.is(arguments,[Absolute]);
