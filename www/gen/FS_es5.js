@@ -3220,6 +3220,9 @@ define([], function () {
             if (!SFile.is(dstZip)) options = dstZip;
             options = options || {};
             var jszip = new zip.JSZip();
+            function getTimestamp(f) {
+                return new Date(f.lastUpdate() - new Date().getTimezoneOffset() * 60 * 1000);
+            }
             function loop(dst, dir) {
                 return dir.each(function (f) {
                     var r = DU.resolve();
@@ -3228,11 +3231,15 @@ define([], function () {
                     }
                     return r.then(function () {
                         if (f.isDir()) {
-                            var sf = dst.folder(f.name().replace(/[\/\\]$/, ""));
+                            var sf = dst.folder(f.name().replace(/[\/\\]$/, ""), {
+                                date: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60 * 1000)
+                            });
                             return loop(sf, f);
                         } else {
                             return f.getContent(function (c) {
-                                dst.file(f.name(), c.toArrayBuffer());
+                                dst.file(f.name(), c.toArrayBuffer(), {
+                                    date: getTimestamp(f)
+                                });
                             });
                         }
                     });
