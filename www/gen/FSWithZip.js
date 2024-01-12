@@ -2883,10 +2883,26 @@ SFile.prototype={
     },
     recursive:function (fun,options) {
         var dir=this.assertDir();
+        if (typeof fun!=="function") {
+            const gen=function*(dir){
+                for (let f of dir.listFiles(options)) {
+                    if (f.isDir()) {
+                        if (options.includeDir) yield f;
+                        yield* gen(f);
+                    } else {
+                        yield f;
+                    }
+                }
+            };
+            options=dir.convertOptions(fun);
+            return gen(dir);
+        }
         options=dir.convertOptions(options);
         return dir.each(function (f) {
-            if (f.isDir()) return f.recursive(fun,options);
-            else return fun(f);
+            if (f.isDir()) {
+                if (options.includeDir) fun(f);
+                return f.recursive(fun,options);
+            } else return fun(f);
         },options);
     },
     _listFiles:function (options,async) {
@@ -3272,7 +3288,7 @@ function (SFile,/*JSZip,*/fsv,Util,DU) {
             if (options.progress) {
                 await options.progress(dest);
             }
-            console.log("Inflating",zipEntry.name);
+            console.log("Inflating",zipEntry.name,zipEntry);
             if (dest.isDir()) continue;
             const s={
                 file:dest,
@@ -3289,7 +3305,10 @@ function (SFile,/*JSZip,*/fsv,Util,DU) {
                 if (dest.path()!==res.path()) s.redirectedTo=res;
                 dest=res;
             }
-            if (dest) dest.setContent(c);
+            if (dest) {
+                dest.setContent(c);
+                dest.setMetaInfo({lastUpdate:zipEntry.date.getTime()});
+            }
         }
         console.log("unzip done",status);
         return status;
