@@ -433,22 +433,29 @@ try{
             throw new Error("ROM!");
         }
     }
-    function chkRecurAsync(dir,options,result) {
-        var di=[];
-        DU.timeout(100).then(function () {
-            return dir.recursive(function (f) {
+    async function chkRecurAsync(dir,options,result) {
+        try {
+            var di=["start"];
+            await DU.timeout(100);
+            await dir.recursive(function (f) {
                 di.push(f.relPath(dir));
                 console.log("CHKRA",f.name());
                 return DU.timeout(500);
             },options);
-        }).then(function () {
-            assert.eq(di.join(","), "start,"+result);
             console.log("checkRecurasync",di);
-        }).fail(function (e) {
+            assert.eq(di.join(","), "start,"+result);    
+            di=["start"];
+            for (let f of dir.recursive()) {
+                di.push(f.relPath(dir));
+                console.log("CHKRA gen ",f.name());
+                await DU.timeout(500);
+            }
+            console.log("checkRecurasync gen ",di);
+            assert.eq(di.join(","), "start,"+result);    
+        } catch (e) {
             console.error(e);
             alert(e);
-        });
-        di.push("start");
+        }
     }
     function chkRecur(dir,options,result) {
         var di=[];
