@@ -83,7 +83,7 @@ function (SFile,/*JSZip,*/fsv,Util,DU) {
             if (options.progress) {
                 await options.progress(dest);
             }
-            console.log("Inflating",zipEntry.name);
+            console.log("Inflating",zipEntry.name,zipEntry);
             if (dest.isDir()) continue;
             const s={
                 file:dest,
@@ -100,7 +100,10 @@ function (SFile,/*JSZip,*/fsv,Util,DU) {
                 if (dest.path()!==res.path()) s.redirectedTo=res;
                 dest=res;
             }
-            if (dest) dest.setContent(c);
+            if (dest) {
+                dest.setContent(c);
+                dest.setMetaInfo({lastUpdate:zipEntry.date.getTime()});
+            }
         }
         console.log("unzip done",status);
         return status;
