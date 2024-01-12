@@ -2,6 +2,8 @@ cd /d %~dp0
 :loop
 call r_js -o build_fs.js
 sleep 1
+call r_js -o build_fs_umd.js
+sleep 1
 call r_js -o build_fswithzip.js
 sleep 1
 call r_js -o build_fstools.js

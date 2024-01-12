@@ -1,4 +1,16 @@
-define([],function () {
+(function(req, factory){
+	if (typeof define!=="undefined" && define && define.amd) {
+		return define(req,factory);
+	} else {
+		var root=(function (){
+			if (typeof window!=="undefined") return window;
+			if (typeof self!=="undefined") return self;
+			if (typeof global!=="undefined") return global;
+			return this;
+		})();
+		root.FS=factory();
+	}
+})([],function () {
     var define,requirejs;
 	var R={};
 	var REQJS="REQJS_";
