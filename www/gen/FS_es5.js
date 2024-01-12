@@ -1,10 +1,3 @@
-// This is kowareta! because r.js does not generate module name:
-//   define("FSLib",[], function () { ...
-/*
-(function (d,f) {
-module.exports=f();
-})
-*/
 define([], function () {
     var define, requirejs;
     var R = {};
