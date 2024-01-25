@@ -1,6 +1,7 @@
 //requirejs(["WebFS","LSFS","../test/ROM_k","assert","PathUtil","SFile","NativeFS","RootFS","Content","DeferredUtil","WorkerRevProxy","FSRevProxy"],
 //function (WebFS,LSFS, romk,assert,P,SFile, NativeFS,RootFS,Content,DU,WRP,FSRevProxy) {
 /*global requirejs*/
+const timeout=(t)=>new Promise(s=>setTimeout(s,t));
 requirejs(["FS","../test/ROM_k","WorkerRevProxy","FSRevProxy"],
 function (FS,romk,WRP,FSRevProxy) {
 try{
@@ -310,6 +311,7 @@ try{
             f.rm({noTrash:true});
         });
         //setTimeout(function () {location.reload();},10000);
+        checkZip(testd);
     } else {
         try {
             console.log("Test pass",2);
@@ -331,7 +333,7 @@ try{
             chkRecur(testd,{includeTrashed:true}, "test.txt,sub/test2.txt");
             testd.rel("test.txt").rm({noTrash:true});
             chkRecur(testd,{}, "sub/test2.txt");
-
+            
 
             testd.removeWithoutTrash({recursive:true});
             chkrom();
@@ -507,5 +509,34 @@ try{
                 throw new Error("ERA-");
             });
         });
+    }
+    async function checkZip(dir) {
+        await timeout(3000);
+        dir.rel("ziping.txt").text("zipping");
+        let tre=dir.getDirTree();
+        console.log("TRE",tre);
+        const zipf=FS.get("/ram/comp.zip");
+        await FS.zip.zip(dir, zipf );
+        let ext=dir.rel("ext/");
+        ext.mkdir();
+        await FS.zip.unzip(zipf, ext);
+
+        let tre2=ext.getDirTree();
+        console.log("TRE2",tre2);
+        dir.rel("ziping.txt").removeWithoutTrash();
+        ext.removeWithoutTrash({recursive:true});
+        assert.eq( Object.keys(tre).length, Object.keys(tre2).length);
+        for (let k2 of Object.keys(tre2)) {
+            let k=k2.replace(/\/ext/,"");
+            console.log(k,k2);
+            assert(k2 in tre2);
+            assert(k in tre);
+            assert(tre[k].lastUpdate);
+            console.log(tre[k].lastUpdate-tre2[k2].lastUpdate);
+            //assert(Math.abs(tre[k].lastUpdate-tre2[k2].lastUpdate)<2000);
+            assert(Math.abs(
+                Math.floor(tre[k].lastUpdate/1000)- 
+                Math.floor(tre2[k2].lastUpdate/1000))<=1);
+        }
     }
 });

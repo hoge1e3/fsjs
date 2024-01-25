@@ -3319,7 +3319,7 @@ function (SFile,/*JSZip,*/fsv,Util,DU) {
             }
             if (dest) {
                 dest.setContent(c);
-                dest.setMetaInfo({lastUpdate:zipEntry.date.getTime()});
+                dest.setMetaInfo({lastUpdate:zipEntry.date.getTime() + new Date().getTimezoneOffset()*60*1000});
             }
         }
         console.log("unzip done",status);
