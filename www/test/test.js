@@ -311,7 +311,8 @@ try{
             f.rm({noTrash:true});
         });
         //setTimeout(function () {location.reload();},10000);
-        checkZip(testd);
+        asyncTest(testd);
+        
     } else {
         try {
             console.log("Test pass",2);
@@ -509,6 +510,37 @@ try{
                 throw new Error("ERA-");
             });
         });
+    }
+    async function asyncTest(testd) {
+        await checkZip(testd);
+        await checkWatch(testd);
+    }
+    async function checkWatch(testd) {
+        const buf=[];
+        const w=testd.watch((type,f)=>{
+            buf.push(type+":"+f.relPath(testd));
+        });
+        async function buildScrap(f,t="aaa") {
+            await timeout(100);
+            f.text(t);
+            await timeout(100);
+            f.text(t+"!");
+            await timeout(100);
+            f.removeWithoutTrash();
+        }
+        await buildScrap(testd.rel("hogefuga.txt"));
+        w.remove();
+        await buildScrap(testd.rel("hogefuga.txt"));
+        console.log("checkWatch", buf);
+        assert.eq(buf.join("\n"),[
+            "create:hogefuga.txt",
+            "change:",
+            "change:hogefuga.txt",
+            "change:",
+            "delete:hogefuga.txt",
+            "change:"
+        ].join("\n"),"checkWatch");
+
     }
     async function checkZip(dir) {
         await timeout(3000);
